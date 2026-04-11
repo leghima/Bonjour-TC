@@ -261,7 +261,6 @@ function seConnecter() {
   if (!emailExiste) {
     afficherErreur("login", "Aucun compte trouvé avec cette adresse email."); return;
   }
-
   // Ensuite vérifier le mot de passe
   const user = comptes.find(c => c.email === email && c.password === password);
   if (!user) {
