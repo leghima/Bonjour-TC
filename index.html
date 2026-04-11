@@ -29,6 +29,7 @@
       <a href="#lignes" class="nav-link active">Lignes</a>
       <a href="#horaires" class="nav-link">Horaires</a>
       <a href="#itineraire" class="nav-link">Itinéraire</a>
+      <a href="#billets" class="nav-link">Billets</a>
     </div>
     <div class="nav-badge">Alger</div>
   </nav>
@@ -137,6 +138,167 @@
     </div>
   </section>
 
+  <!-- BILLETTERIE -->
+<section class="section" id="billets">
+  <div class="container">
+    <div class="section-header">
+      <h2>Réserver un billet</h2>
+      <p class="section-sub">Paiement sécurisé via Baridi Mob</p>
+    </div>
+    <div class="billets-grid">
+
+      <!-- Formulaire d'achat -->
+      <div class="billet-form-card">
+        <h3>Choisir votre trajet</h3>
+
+        <div class="form-group">
+          <label>Type de billet</label>
+          <div class="type-grid">
+            <div class="type-option active" onclick="selectType(this, 'simple')">
+              <span class="type-icon">🎫</span>
+              <span class="type-nom">Simple</span>
+              <span class="type-prix">50 DA</span>
+            </div>
+            <div class="type-option" onclick="selectType(this, 'aller-retour')">
+              <span class="type-icon">🔄</span>
+              <span class="type-nom">Aller-retour</span>
+              <span class="type-prix">90 DA</span>
+            </div>
+            <div class="type-option" onclick="selectType(this, 'carnet')">
+              <span class="type-icon">📚</span>
+              <span class="type-nom">Carnet x10</span>
+              <span class="type-prix">400 DA</span>
+            </div>
+            <div class="type-option" onclick="selectType(this, 'mensuel')">
+              <span class="type-icon">📅</span>
+              <span class="type-nom">Mensuel</span>
+              <span class="type-prix">2500 DA</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Ligne</label>
+          <select id="ligne-billet" class="form-select">
+            <option value="">Sélectionner une ligne</option>
+            <option value="M1">Métro Ligne 1</option>
+            <option value="M2">Métro Ligne 2</option>
+            <option value="T1">Tramway Alger</option>
+            <option value="21">Bus Ligne 21</option>
+            <option value="34">Bus Ligne 34</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Nom complet</label>
+          <input type="text" id="nom-voyageur" class="form-input" placeholder="Ex: Leghima Ahmed"/>
+        </div>
+
+        <div class="form-group">
+          <label>Date de voyage</label>
+          <input type="date" id="date-voyage" class="form-input"/>
+        </div>
+
+        <div class="form-group">
+          <label>Nombre de billets</label>
+          <div class="quantite-ctrl">
+            <button onclick="changerQte(-1)">−</button>
+            <span id="quantite">1</span>
+            <button onclick="changerQte(1)">+</button>
+          </div>
+        </div>
+
+        <div class="total-bar">
+          <span>Total à payer</span>
+          <span id="total-prix" class="total-montant">50 DA</span>
+        </div>
+
+        <button class="btn-primary" onclick="ouvrirPaiement()">
+          Payer avec Baridi Mob →
+        </button>
+      </div>
+
+      <!-- Mes billets -->
+      <div class="mes-billets-card">
+        <h3>Mes billets</h3>
+        <div id="mes-billets-list">
+          <div class="billets-empty">
+            <span>🎫</span>
+            <p>Aucun billet acheté pour l'instant</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- MODAL PAIEMENT -->
+<div id="modal-paiement" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Paiement Baridi Mob</h3>
+      <button class="modal-close" onclick="fermerModal('modal-paiement')">✕</button>
+    </div>
+    <div class="baridi-logo">
+      <div class="baridi-icon">💳</div>
+      <div>
+        <div class="baridi-nom">Baridi Mob</div>
+        <div class="baridi-sub">Paiement mobile sécurisé</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Numéro de compte Baridi Mob</label>
+      <input type="text" id="baridi-num" class="form-input" placeholder="07XXXXXXXX" maxlength="10"/>
+    </div>
+    <div class="form-group">
+      <label>Code PIN</label>
+      <input type="password" id="baridi-pin" class="form-input" placeholder="••••" maxlength="4"/>
+    </div>
+    <div class="paiement-recap">
+      <div class="recap-row">
+        <span>Billet</span>
+        <span id="recap-type">—</span>
+      </div>
+      <div class="recap-row">
+        <span>Ligne</span>
+        <span id="recap-ligne">—</span>
+      </div>
+      <div class="recap-row">
+        <span>Date</span>
+        <span id="recap-date">—</span>
+      </div>
+      <div class="recap-row total">
+        <span>Total</span>
+        <span id="recap-total">—</span>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="confirmerPaiement()">
+      Confirmer le paiement
+    </button>
+    <p class="paiement-note">🔒 Simulation — aucune vraie transaction effectuée</p>
+  </div>
+</div>
+
+<!-- MODAL QR CODE -->
+<div id="modal-qr" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Votre billet électronique</h3>
+      <button class="modal-close" onclick="fermerModal('modal-qr')">✕</button>
+    </div>
+    <div class="billet-valide">
+      <div class="valide-badge">✓ Billet valide</div>
+    </div>
+    <div class="qr-container">
+      <canvas id="qr-canvas"></canvas>
+    </div>
+    <div class="billet-details" id="billet-details"></div>
+    <p class="qr-note">Présentez ce QR code au contrôleur</p>
+    <button class="btn-primary" onclick="fermerModal('modal-qr')">Fermer</button>
+  </div>
+</div>
+
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
@@ -145,12 +307,12 @@
         <p>Application open source — données basées sur le réseau ETUSA & Métro El Djazaïr</p>
       </div>
       <div class="footer-bottom">
-        <span>© 2025 Bonjour TC — Projet universitaire UMMTO</span>
+        <span>© 2025 Bonjour TC — LEGHIMA Arezki</span>
         <a href="https://github.com/leghima/Bonjour-TC" target="_blank">GitHub →</a>
       </div>
     </div>
   </footer>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
