@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bonjour TC – Transports Alger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <div class="nav-icon">🚇</div>
+      <span>Bonjour <strong>TC</strong></span>
+    </div>
+    <div class="nav-links">
+      <a href="#lignes" class="nav-link active">Lignes</a>
+      <a href="#horaires" class="nav-link">Horaires</a>
+      <a href="#itineraire" class="nav-link">Itinéraire</a>
+    </div>
+    <div class="nav-badge">Alger</div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-tag">Transports en commun</div>
+      <h1>Vos déplacements à <span>Alger</span>, simplifiés.</h1>
+      <p>Métro, tramway, bus ETUSA — toutes les lignes et horaires en un seul endroit.</p>
+      <div class="hero-search">
+        <input type="text" id="search-input" placeholder="Rechercher une station..." />
+        <button onclick="rechercherStation()">Rechercher</button>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <span class="stat-num">3</span>
+        <span class="stat-label">Lignes métro</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">2</span>
+        <span class="stat-label">Tramways</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">122</span>
+        <span class="stat-label">Lignes bus</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALERTES -->
+  <section class="alertes-section">
+    <div class="container">
+      <div class="alerte-bar">
+        <span class="alerte-icon">⚠️</span>
+        <span>Ligne 34 – Déviation en cours jusqu'au 20 avril. Prévoir +10 min.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIGNES -->
+  <section class="section" id="lignes">
+    <div class="container">
+      <div class="section-header">
+        <h2>Les lignes</h2>
+        <div class="filtres">
+          <button class="filtre-btn active" onclick="filtrer('tous', this)">Tous</button>
+          <button class="filtre-btn" onclick="filtrer('metro', this)">Métro</button>
+          <button class="filtre-btn" onclick="filtrer('tramway', this)">Tramway</button>
+          <button class="filtre-btn" onclick="filtrer('bus', this)">Bus</button>
+        </div>
+      </div>
+      <div id="lignes-container" class="lignes-grid"></div>
+    </div>
+  </section>
+
+  <!-- HORAIRES -->
+  <section class="section section-dark" id="horaires">
+    <div class="container">
+      <div class="section-header">
+        <h2>Prochains passages</h2>
+        <p class="section-sub">Sélectionnez une ligne pour voir les horaires</p>
+      </div>
+      <div class="horaires-grid" id="horaires-container"></div>
+    </div>
+  </section>
+
+  <!-- CARTE -->
+<section class="section" id="carte">
+  <div class="container">
+    <div class="section-header">
+      <h2>Carte du réseau</h2>
+      <p class="section-sub">Cliquez sur une station pour voir les infos</p>
+    </div>
+    <div id="map"></div>
+  </div>
+</section>
+
+  <!-- ITINERAIRE -->
+  <section class="section" id="itineraire">
+    <div class="container">
+      <div class="section-header">
+        <h2>Calculer un itinéraire</h2>
+        <p class="section-sub">Trouvez le meilleur trajet entre deux stations</p>
+      </div>
+      <div class="itin-card">
+        <div class="itin-fields">
+          <div class="itin-field">
+            <div class="itin-dot depart"></div>
+            <input type="text" id="depart" placeholder="Station de départ" list="stations-list" />
+          </div>
+          <button class="swap-btn" onclick="swapStations()">⇅</button>
+          <div class="itin-field">
+            <div class="itin-dot arrivee"></div>
+            <input type="text" id="arrivee" placeholder="Station d'arrivée" list="stations-list" />
+          </div>
+        </div>
+        <datalist id="stations-list"></datalist>
+        <button class="btn-primary" onclick="calculerItineraire()">Trouver l'itinéraire →</button>
+        <div id="itin-result" class="itin-result hidden"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-logo">🚇 Bonjour TC</div>
+        <p>Application open source — données basées sur le réseau ETUSA & Métro El Djazaïr</p>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 Bonjour TC — Projet universitaire UMMTO</span>
+        <a href="https://github.com/leghima/Bonjour-TC" target="_blank">GitHub →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
