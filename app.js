@@ -72,8 +72,6 @@ const lignes = [
   }
 ];
 // ── AUTHENTIFICATION ─────────────────────────────────────────────────────────
-
-// ⚠️ Remplace ces 3 valeurs par les tiennes sur emailjs.com
 const EMAILJS_PUBLIC_KEY = "Lw--kynH_tBmsrPY0";
 const EMAILJS_SERVICE_ID = "service_leghima1";
 const EMAILJS_TEMPLATE_ID = "template_leghima1";
@@ -257,17 +255,23 @@ function seConnecter() {
   }
 
   const comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
-  const user = comptes.find(c => c.email === email && c.password === password);
+  
+  // Vérifier d'abord si l'email existe
+  const emailExiste = comptes.find(c => c.email === email);
+  if (!emailExiste) {
+    afficherErreur("login", "Aucun compte trouvé avec cette adresse email."); return;
+  }
 
+  // Ensuite vérifier le mot de passe
+  const user = comptes.find(c => c.email === email && c.password === password);
   if (!user) {
-    afficherErreur("login", "Email ou mot de passe incorrect."); return;
+    afficherErreur("login", "Mot de passe incorrect."); return;
   }
 
   localStorage.setItem("btc-user", JSON.stringify({ nom: user.nom, email: user.email }));
   document.getElementById("auth-screen").classList.add("hidden");
   mettreAJourNavbar(user);
 }
-
 // ── Déconnexion ──────────────────────────────────────────────────────────────
 function seDeconnecter() {
   if (confirm("Voulez-vous vous déconnecter ?")) {
