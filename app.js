@@ -439,23 +439,6 @@ function filtrer(type, btn) {
   afficherLignes(type);
 }
 
-// ── Recherche de station ─────────────────────────────────────────────────────
-function rechercherStation() {
-  const query = document.getElementById("search-input").value.trim().toLowerCase();
-  if (!query) return;
-
-  const resultats = lignes.filter(l =>
-    l.stations.some(s => s.toLowerCase().includes(query))
-  );
-
-  if (resultats.length > 0) {
-    document.getElementById("depart").value =
-      resultats[0].stations.find(s => s.toLowerCase().includes(query)) || "";
-    document.getElementById("itineraire").scrollIntoView({ behavior: "smooth" });
-  } else {
-    alert("Station introuvable. Essayez un autre nom.");
-  }
-}
 
 // ── Swap départ / arrivée ────────────────────────────────────────────────────
 function swapStations() {
