@@ -121,7 +121,7 @@
     <div class="hero-content">
       <div class="hero-tag">Transports en commun</div>
       <h1>Vos déplacements à <span>Alger</span>, simplifiés.</h1>
-      <p>Métro, tramway, bus ETUSA — toutes les lignes et horaires en un seul endroit.</p>
+      <p>Métro, tramway, bus — toutes les lignes et horaires en un seul endroit.</p>
       <div class="hero-search">
         <input type="text" id="search-input" placeholder="Rechercher une station..." />
         <button onclick="rechercherStation()">Rechercher</button>
@@ -389,5 +389,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script> 
   <script src="app.js"></script>
+  <script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => reg.unregister());
+    });
+  }
+</script>
 </body>
 </html>
