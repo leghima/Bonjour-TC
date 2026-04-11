@@ -8,8 +8,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#006B3F">
 </head>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js");
+  }
+</script>
 <body>
 
   <!-- NAVBAR -->
@@ -91,6 +98,9 @@
   </section>
 
   <!-- CARTE -->
+   <button class="btn-geo" onclick="stationsProches()">
+  📍 Stations près de moi
+</button>
 <section class="section" id="carte">
   <div class="container">
     <div class="section-header">

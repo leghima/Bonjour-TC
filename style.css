@@ -682,3 +682,74 @@ body {
   font-weight: 600;
   color: white;
 }
+/* ── DARK MODE ── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1A1A1A;
+    --card: #242424;
+    --text: #F0EDE8;
+    --muted: #9A9A9A;
+    --border: rgba(255,255,255,0.08);
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  body { background: var(--bg); color: var(--text); }
+
+  .navbar { background: #1F1F1F; border-bottom-color: rgba(255,255,255,0.08); }
+
+  .nav-link:hover, .nav-link.active {
+    background: rgba(0,107,63,0.3);
+  }
+
+  .filtre-btn {
+    background: #2A2A2A;
+    color: var(--muted);
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .filtre-btn.active {
+    background: var(--metro);
+    color: white;
+  }
+
+  .ligne-card, .horaire-card, .itin-card {
+    background: var(--card);
+    border-color: rgba(255,255,255,0.06);
+  }
+
+  .station-chip { background: #2A2A2A; color: var(--muted); }
+
+  .hero-search input { background: #2A2A2A; color: var(--text); }
+
+  .itin-field { background: #2A2A2A; }
+
+  .itin-field input { color: var(--text); }
+
+  .section-dark { background: #141414; }
+
+  .alertes-section {
+    background: #2A2000;
+    border-bottom-color: #3A3000;
+  }
+
+  .alerte-bar { color: #FFD580; }
+}
+/* ── BOUTON GEO ── */
+.btn-geo {
+  padding: 9px 18px;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+  color: var(--text);
+}
+
+.btn-geo:hover {
+  background: var(--metro-light);
+  border-color: var(--metro);
+  color: var(--metro);
+}
