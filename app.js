@@ -501,3 +501,173 @@ afficherLignes();
 afficherHoraires();
 remplirStations();
 initCarte();
+
+// ── BILLETTERIE ─────────────────────────────────────────────────────────────
+const PRIX = { simple: 50, "aller-retour": 90, carnet: 400, mensuel: 2500 };
+const LABELS = { simple: "Billet Simple", "aller-retour": "Aller-Retour", carnet: "Carnet x10", mensuel: "Abonnement Mensuel" };
+let typeBillet = "simple";
+let quantite = 1;
+let billets = JSON.parse(localStorage.getItem("billets") || "[]");
+
+function selectType(el, type) {
+  document.querySelectorAll(".type-option").forEach(o => o.classList.remove("active"));
+  el.classList.add("active");
+  typeBillet = type;
+  majTotal();
+}
+
+function changerQte(delta) {
+  quantite = Math.max(1, Math.min(10, quantite + delta));
+  document.getElementById("quantite").textContent = quantite;
+  majTotal();
+}
+
+function majTotal() {
+  const total = PRIX[typeBillet] * quantite;
+  document.getElementById("total-prix").textContent = total + " DA";
+}
+
+function ouvrirPaiement() {
+  const nom = document.getElementById("nom-voyageur").value.trim();
+  const ligne = document.getElementById("ligne-billet").value;
+  const date = document.getElementById("date-voyage").value;
+
+  if (!nom || !ligne || !date) {
+    alert("Veuillez remplir tous les champs.");
+    return;
+  }
+
+  // Remplir le récap
+  document.getElementById("recap-type").textContent = LABELS[typeBillet];
+  document.getElementById("recap-ligne").textContent = ligne;
+  document.getElementById("recap-date").textContent = new Date(date).toLocaleDateString("fr-DZ");
+  document.getElementById("recap-total").textContent = (PRIX[typeBillet] * quantite) + " DA";
+
+  document.getElementById("modal-paiement").classList.remove("hidden");
+}
+
+function confirmerPaiement() {
+  const num = document.getElementById("baridi-num").value.trim();
+  const pin = document.getElementById("baridi-pin").value.trim();
+
+  if (!num || num.length < 10) {
+    alert("Numéro Baridi Mob invalide.");
+    return;
+  }
+  if (!pin || pin.length < 4) {
+    alert("Code PIN invalide.");
+    return;
+  }
+
+  // Simuler un traitement
+  const btn = document.querySelector("#modal-paiement .btn-primary");
+  btn.textContent = "Traitement en cours...";
+  btn.disabled = true;
+
+  setTimeout(() => {
+    fermerModal("modal-paiement");
+    btn.textContent = "Confirmer le paiement";
+    btn.disabled = false;
+
+    // Créer le billet
+    const billet = {
+      id: "BTC-" + Date.now(),
+      type: typeBillet,
+      label: LABELS[typeBillet],
+      ligne: document.getElementById("ligne-billet").value,
+      nom: document.getElementById("nom-voyageur").value.trim(),
+      date: document.getElementById("date-voyage").value,
+      prix: PRIX[typeBillet] * quantite,
+      quantite: quantite,
+      timestamp: new Date().toISOString(),
+    };
+
+    billets.unshift(billet);
+    localStorage.setItem("billets", JSON.stringify(billets));
+
+    afficherMesBillets();
+    afficherQR(billet);
+  }, 1800);
+}
+
+function afficherQR(billet) {
+  document.getElementById("modal-qr").classList.remove("hidden");
+
+  // Données encodées dans le QR
+  const qrData = JSON.stringify({
+    id: billet.id,
+    nom: billet.nom,
+    ligne: billet.ligne,
+    type: billet.label,
+    date: billet.date,
+    valide: true,
+  });
+
+  // Générer le QR code
+  const canvas = document.getElementById("qr-canvas");
+  canvas.innerHTML = "";
+
+  new QRCode(canvas, {
+    text: qrData,
+    width: 200,
+    height: 200,
+    colorDark: "#006B3F",
+    colorLight: "#FFFFFF",
+    correctLevel: QRCode.CorrectLevel.H,
+  });
+
+  // Détails du billet
+  document.getElementById("billet-details").innerHTML = `
+    <div><span>Référence</span><span>${billet.id}</span></div>
+    <div><span>Voyageur</span><span>${billet.nom}</span></div>
+    <div><span>Ligne</span><span>${billet.ligne}</span></div>
+    <div><span>Type</span><span>${billet.label}</span></div>
+    <div><span>Date</span><span>${new Date(billet.date).toLocaleDateString("fr-DZ")}</span></div>
+    <div><span>Montant payé</span><span>${billet.prix} DA</span></div>
+  `;
+}
+
+function afficherMesBillets() {
+  const container = document.getElementById("mes-billets-list");
+
+  if (billets.length === 0) {
+    container.innerHTML = `
+      <div class="billets-empty">
+        <span>🎫</span>
+        <p>Aucun billet acheté pour l'instant</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = billets.map(b => `
+    <div class="billet-item" onclick='afficherQR(${JSON.stringify(b)})'>
+      <div class="billet-item-icon" style="background:var(--metro-light)">🎫</div>
+      <div class="billet-item-info">
+        <div class="billet-item-titre">${b.label} — ${b.ligne}</div>
+        <div class="billet-item-sub">${b.nom} · ${new Date(b.date).toLocaleDateString("fr-DZ")}</div>
+      </div>
+      <span class="billet-item-badge">${b.prix} DA</span>
+    </div>
+  `).join("");
+}
+
+function fermerModal(id) {
+  document.getElementById(id).classList.add("hidden");
+}
+
+// Fermer modal en cliquant dehors
+document.addEventListener("click", e => {
+  if (e.target.classList.contains("modal-overlay")) {
+    e.target.classList.add("hidden");
+  }
+});
+
+// Initialiser les billets sauvegardés
+afficherMesBillets();
+
+// Date minimum = aujourd'hui
+const today = new Date().toISOString().split("T")[0];
+document.getElementById("date-voyage").min = today;
+document.getElementById("date-voyage").value = today;
+majTotal();
