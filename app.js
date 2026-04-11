@@ -71,7 +71,97 @@ const lignes = [
     direction: "Service interrompu"
   }
 ];
+// ── AUTHENTIFICATION ─────────────────────────────────────────────────────────
+function verifierAuth() {
+  const user = JSON.parse(localStorage.getItem("btc-user") || "null");
+  if (!user) {
+    document.getElementById("auth-screen").classList.remove("hidden");
+  } else {
+    document.getElementById("auth-screen").classList.add("hidden");
+    mettreAJourNavbar(user);
+  }
+}
 
+function switchAuth(mode, btn) {
+  document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("form-connexion").classList.toggle("hidden", mode !== "connexion");
+  document.getElementById("form-inscription").classList.toggle("hidden", mode !== "inscription");
+}
+
+function sInscrire() {
+  const nom = document.getElementById("reg-nom").value.trim();
+  const email = document.getElementById("reg-email").value.trim();
+  const password = document.getElementById("reg-password").value;
+  const confirm = document.getElementById("reg-confirm").value;
+
+  if (!nom || !email || !password || !confirm) {
+    alert("Veuillez remplir tous les champs."); return;
+  }
+  if (!email.includes("@")) {
+    alert("Adresse email invalide."); return;
+  }
+  if (password.length < 6) {
+    alert("Le mot de passe doit contenir au moins 6 caractères."); return;
+  }
+  if (password !== confirm) {
+    alert("Les mots de passe ne correspondent pas."); return;
+  }
+
+  // Vérifier si email déjà utilisé
+  const comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
+  if (comptes.find(c => c.email === email)) {
+    alert("Cet email est déjà utilisé."); return;
+  }
+
+  // Créer le compte
+  const user = { nom, email, password, createdAt: new Date().toISOString() };
+  comptes.push(user);
+  localStorage.setItem("btc-comptes", JSON.stringify(comptes));
+  localStorage.setItem("btc-user", JSON.stringify({ nom, email }));
+
+  document.getElementById("auth-screen").classList.add("hidden");
+  mettreAJourNavbar({ nom, email });
+  alert("Bienvenue " + nom + " ! 🎉");
+}
+
+function seConnecter() {
+  const email = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+
+  if (!email || !password) {
+    alert("Veuillez remplir tous les champs."); return;
+  }
+
+  const comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
+  const user = comptes.find(c => c.email === email && c.password === password);
+
+  if (!user) {
+    alert("Email ou mot de passe incorrect."); return;
+  }
+
+  localStorage.setItem("btc-user", JSON.stringify({ nom: user.nom, email: user.email }));
+  document.getElementById("auth-screen").classList.add("hidden");
+  mettreAJourNavbar(user);
+}
+
+function seDeconnecter() {
+  if (confirm("Voulez-vous vous déconnecter ?")) {
+    localStorage.removeItem("btc-user");
+    document.getElementById("auth-screen").classList.remove("hidden");
+    document.getElementById("nav-avatar").textContent = "?";
+    document.getElementById("nav-nom").textContent = "";
+  }
+}
+
+function mettreAJourNavbar(user) {
+  const initiales = user.nom.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  document.getElementById("nav-avatar").textContent = initiales;
+  document.getElementById("nav-nom").textContent = user.nom.split(" ")[0];
+}
+
+// Vérifier au chargement
+verifierAuth();
 // ── Affichage des lignes ─────────────────────────────────────────────────────
 // ── Géolocalisation ──────────────────────────────────────────────────────────
 function stationsProches() {
