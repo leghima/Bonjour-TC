@@ -1241,3 +1241,84 @@ body {
   border-color: #C0392B;
   color: #C0392B;
 }
+/* Messages erreur / succès */
+.auth-erreur {
+  background: #FDECEC;
+  color: #A63030;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 14px;
+  display: none;
+  border: 1px solid #F09595;
+}
+
+.auth-succes {
+  background: #E6F4EE;
+  color: #085041;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 14px;
+  display: none;
+  border: 1px solid #5DCAA5;
+}
+
+/* Vérification code */
+.verif-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.verif-icon { font-size: 36px; margin-bottom: 8px; }
+
+.verif-header h4 {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.verif-header p { font-size: 13px; color: #6B6B6B; }
+
+.code-input {
+  text-align: center;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  letter-spacing: 8px;
+  font-family: 'Syne', sans-serif !important;
+}
+
+.verif-timer-bar {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #6B6B6B;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #F4F2EE;
+  border-radius: 8px;
+}
+
+.verif-timer {
+  font-weight: 700;
+  color: #C0392B;
+  font-family: 'Syne', sans-serif;
+}
+
+/* Force du mot de passe */
+.password-strength {
+  font-size: 12px;
+  margin-top: 6px;
+  font-weight: 500;
+  height: 16px;
+}
+
+.password-match {
+  font-size: 12px;
+  margin-top: 6px;
+  font-weight: 500;
+  height: 16px;
+}

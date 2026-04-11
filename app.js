@@ -72,6 +72,18 @@ const lignes = [
   }
 ];
 // ── AUTHENTIFICATION ─────────────────────────────────────────────────────────
+
+// ⚠️ Remplace ces 3 valeurs par les tiennes sur emailjs.com
+const EMAILJS_PUBLIC_KEY = "Lw--kynH_tBmsrPY0";
+const EMAILJS_SERVICE_ID = "service_leghima1";
+const EMAILJS_TEMPLATE_ID = "template_leghima1";
+
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+let codeConfirmation = null;
+let codeExpiration = null;
+let pendingUser = null;
+
 function verifierAuth() {
   const user = JSON.parse(localStorage.getItem("btc-user") || "null");
   if (!user) {
@@ -82,62 +94,173 @@ function verifierAuth() {
   }
 }
 
+// Indicateur force mot de passe en temps réel
+document.addEventListener("DOMContentLoaded", () => {
+  const pwd = document.getElementById("reg-password");
+  const confirm = document.getElementById("reg-confirm");
+
+  if (pwd) {
+    pwd.addEventListener("input", () => {
+      const el = document.getElementById("password-strength");
+      const v = pwd.value;
+      if (v.length === 0) { el.textContent = ""; return; }
+      if (v.length < 6) { el.textContent = "⚠️ Trop court"; el.style.color = "#C0392B"; }
+      else if (v.length < 10) { el.textContent = "✓ Correct"; el.style.color = "#E8A020"; }
+      else { el.textContent = "✓✓ Fort"; el.style.color = "#006B3F"; }
+    });
+  }
+
+  if (confirm) {
+    confirm.addEventListener("input", () => {
+      const el = document.getElementById("password-match");
+      const pwd = document.getElementById("reg-password").value;
+      if (confirm.value.length === 0) { el.textContent = ""; return; }
+      if (confirm.value === pwd) {
+        el.textContent = "✓ Les mots de passe correspondent";
+        el.style.color = "#006B3F";
+      } else {
+        el.textContent = "✗ Les mots de passe ne correspondent pas";
+        el.style.color = "#C0392B";
+      }
+    });
+  }
+});
+
 function switchAuth(mode, btn) {
   document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
   btn.classList.add("active");
   document.getElementById("form-connexion").classList.toggle("hidden", mode !== "connexion");
   document.getElementById("form-inscription").classList.toggle("hidden", mode !== "inscription");
+  document.getElementById("form-verification").classList.add("hidden");
 }
 
+// ── Inscription ──────────────────────────────────────────────────────────────
 function sInscrire() {
   const nom = document.getElementById("reg-nom").value.trim();
   const email = document.getElementById("reg-email").value.trim();
   const password = document.getElementById("reg-password").value;
   const confirm = document.getElementById("reg-confirm").value;
 
+  // Validations
   if (!nom || !email || !password || !confirm) {
-    alert("Veuillez remplir tous les champs."); return;
+    afficherErreur("reg", "Veuillez remplir tous les champs."); return;
   }
-  if (!email.includes("@")) {
-    alert("Adresse email invalide."); return;
+  if (!email.includes("@") || !email.includes(".")) {
+    afficherErreur("reg", "Adresse email invalide."); return;
   }
   if (password.length < 6) {
-    alert("Le mot de passe doit contenir au moins 6 caractères."); return;
+    afficherErreur("reg", "Le mot de passe doit contenir au moins 6 caractères."); return;
   }
   if (password !== confirm) {
-    alert("Les mots de passe ne correspondent pas."); return;
+    afficherErreur("reg", "Les mots de passe ne correspondent pas."); return;
   }
 
   // Vérifier si email déjà utilisé
   const comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
   if (comptes.find(c => c.email === email)) {
-    alert("Cet email est déjà utilisé."); return;
+    afficherErreur("reg", "Cet email est déjà utilisé."); return;
   }
 
-  // Créer le compte
-  const user = { nom, email, password, createdAt: new Date().toISOString() };
-  comptes.push(user);
-  localStorage.setItem("btc-comptes", JSON.stringify(comptes));
-  localStorage.setItem("btc-user", JSON.stringify({ nom, email }));
+  // Générer un code à 6 chiffres
+  codeConfirmation = Math.floor(100000 + Math.random() * 900000).toString();
+  codeExpiration = Date.now() + 10 * 60 * 1000; // 10 minutes
+  pendingUser = { nom, email, password };
 
-  document.getElementById("auth-screen").classList.add("hidden");
-  mettreAJourNavbar({ nom, email });
-  alert("Bienvenue " + nom + " ! 🎉");
+  // Envoyer l'email
+  const btn = document.querySelector("#form-inscription .btn-primary");
+  btn.textContent = "Envoi en cours...";
+  btn.disabled = true;
+
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    nom: nom,
+    email: email,
+    code: codeConfirmation,
+  }).then(() => {
+    btn.textContent = "Créer mon compte →";
+    btn.disabled = false;
+    afficherVerification(email);
+  }).catch(() => {
+    btn.textContent = "Créer mon compte →";
+    btn.disabled = false;
+    afficherErreur("reg", "Erreur d'envoi d'email. Vérifiez votre configuration EmailJS.");
+  });
 }
 
+function afficherVerification(email) {
+  document.getElementById("form-inscription").classList.add("hidden");
+  document.getElementById("form-connexion").classList.add("hidden");
+  document.getElementById("form-verification").classList.remove("hidden");
+  document.getElementById("verif-email-display").textContent = email;
+
+  // Démarrer le compte à rebours
+  let secondes = 600;
+  const timer = setInterval(() => {
+    secondes--;
+    const min = Math.floor(secondes / 60);
+    const sec = secondes % 60;
+    const el = document.getElementById("verif-timer");
+    if (el) el.textContent = `${min}:${sec.toString().padStart(2, "0")}`;
+    if (secondes <= 0) {
+      clearInterval(timer);
+      if (el) el.textContent = "Expiré";
+    }
+  }, 1000);
+}
+
+function verifierCode() {
+  const code = document.getElementById("verif-code").value.trim();
+
+  if (!code) {
+    afficherErreur("verif", "Entrez le code reçu par email."); return;
+  }
+  if (Date.now() > codeExpiration) {
+    afficherErreur("verif", "Code expiré. Recommencez l'inscription."); return;
+  }
+  if (code !== codeConfirmation) {
+    afficherErreur("verif", "Code incorrect. Vérifiez votre email."); return;
+  }
+
+  // Code correct — créer le compte
+  const comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
+  comptes.push({ ...pendingUser, createdAt: new Date().toISOString() });
+  localStorage.setItem("btc-comptes", JSON.stringify(comptes));
+  localStorage.setItem("btc-user", JSON.stringify({ nom: pendingUser.nom, email: pendingUser.email }));
+
+  document.getElementById("auth-screen").classList.add("hidden");
+  mettreAJourNavbar({ nom: pendingUser.nom });
+
+  codeConfirmation = null;
+  pendingUser = null;
+}
+
+function renvoyerCode() {
+  if (!pendingUser) return;
+  codeConfirmation = Math.floor(100000 + Math.random() * 900000).toString();
+  codeExpiration = Date.now() + 10 * 60 * 1000;
+
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    nom: pendingUser.nom,
+    email: pendingUser.email,
+    code: codeConfirmation,
+  }).then(() => {
+    afficherSucces("verif", "Nouveau code envoyé !");
+  });
+}
+
+// ── Connexion ────────────────────────────────────────────────────────────────
 function seConnecter() {
   const email = document.getElementById("login-email").value.trim();
   const password = document.getElementById("login-password").value;
 
   if (!email || !password) {
-    alert("Veuillez remplir tous les champs."); return;
+    afficherErreur("login", "Veuillez remplir tous les champs."); return;
   }
 
   const comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
   const user = comptes.find(c => c.email === email && c.password === password);
 
   if (!user) {
-    alert("Email ou mot de passe incorrect."); return;
+    afficherErreur("login", "Email ou mot de passe incorrect."); return;
   }
 
   localStorage.setItem("btc-user", JSON.stringify({ nom: user.nom, email: user.email }));
@@ -145,21 +268,49 @@ function seConnecter() {
   mettreAJourNavbar(user);
 }
 
+// ── Déconnexion ──────────────────────────────────────────────────────────────
 function seDeconnecter() {
   if (confirm("Voulez-vous vous déconnecter ?")) {
     localStorage.removeItem("btc-user");
     document.getElementById("auth-screen").classList.remove("hidden");
     document.getElementById("nav-avatar").textContent = "?";
     document.getElementById("nav-nom").textContent = "";
+
+    // Réinitialiser les formulaires
+    document.getElementById("login-email").value = "";
+    document.getElementById("login-password").value = "";
+    document.getElementById("form-connexion").classList.remove("hidden");
+    document.getElementById("form-inscription").classList.add("hidden");
+    document.getElementById("form-verification").classList.add("hidden");
+    document.querySelectorAll(".auth-tab")[0].classList.add("active");
+    document.querySelectorAll(".auth-tab")[1].classList.remove("active");
   }
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function mettreAJourNavbar(user) {
   const initiales = user.nom.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   document.getElementById("nav-avatar").textContent = initiales;
   document.getElementById("nav-nom").textContent = user.nom.split(" ")[0];
 }
 
+function afficherErreur(prefix, msg) {
+  let el = document.getElementById(prefix + "-erreur");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => { el.style.display = "none"; }, 4000);
+}
+
+function afficherSucces(prefix, msg) {
+  let el = document.getElementById(prefix + "-succes");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => { el.style.display = "none"; }, 4000);
+}
+
+verifierAuth();
 // Vérifier au chargement
 verifierAuth();
 // ── Affichage des lignes ─────────────────────────────────────────────────────
