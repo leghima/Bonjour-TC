@@ -1349,3 +1349,48 @@ body {
 }
 
 .auth-forgot a:hover { text-decoration: underline; }
+
+/* ── METEO ── */
+.meteo-section {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+
+.meteo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.meteo-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.meteo-icon { font-size: 28px; }
+
+.meteo-temp {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.meteo-ville {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.meteo-conseil {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}

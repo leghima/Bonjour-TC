@@ -553,6 +553,93 @@ function stationsProches() {
     alert("Impossible d'accéder à votre position.");
   });
 }
+
+// ── MÉTÉO ────────────────────────────────────────────────────────────────────
+async function chargerMeteo() {
+  try {
+    // Open-Meteo : gratuit, aucune clé API requise
+    // Coordonnées d'Alger : 36.737, 3.086
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=36.737&longitude=3.086&current=temperature_2m,weathercode,windspeed_10m&timezone=Africa%2FAlgiers";
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const temp = Math.round(data.current.temperature_2m);
+    const code = data.current.weathercode;
+    const vent = Math.round(data.current.windspeed_10m);
+
+    // Interpréter le code météo WMO
+    let icon, description, conseil;
+
+    if (code === 0) {
+      icon = "☀️"; description = "Ciel dégagé";
+      conseil = "☀️ Beau temps — tous les transports circulent normalement";
+    } else if (code <= 2) {
+      icon = "⛅"; description = "Partiellement nuageux";
+      conseil = "⛅ Temps nuageux — trafic normal sur toutes les lignes";
+    } else if (code === 3) {
+      icon = "☁️"; description = "Couvert";
+      conseil = "☁️ Ciel couvert — trafic normal, pensez à votre veste";
+    } else if (code <= 49) {
+      icon = "🌫️"; description = "Brouillard";
+      conseil = "🌫️ Visibilité réduite — métro et tramway recommandés";
+    } else if (code <= 59) {
+      icon = "🌦️"; description = "Bruine";
+      conseil = "🌦️ Bruine — privilégiez le métro ou le tramway";
+    } else if (code <= 69) {
+      icon = "🌧️"; description = "Pluie";
+      conseil = "🌧️ Il pleut — privilégiez le métro, évitez les bus";
+    } else if (code <= 79) {
+      icon = "❄️"; description = "Neige";
+      conseil = "❄️ Neige — restez en sécurité, prenez le métro";
+    } else if (code <= 84) {
+      icon = "🌧️"; description = "Averses";
+      conseil = "🌧️ Averses — le métro et tramway sont vos meilleurs alliés";
+    } else if (code <= 99) {
+      icon = "⛈️"; description = "Orage";
+      conseil = "⛈️ Orage — évitez de sortir, prenez le métro absolument";
+    } else {
+      icon = "🌤️"; description = "Variable";
+      conseil = "🌤️ Temps variable — trafic normal";
+    }
+
+    // Ajouter info vent si fort
+    if (vent > 40) {
+      conseil += ` — ⚠️ Vent fort (${vent} km/h)`;
+    }
+
+    // Mettre à jour l'affichage
+    document.getElementById("meteo-icon").textContent = icon;
+    document.getElementById("meteo-temp").textContent = `${temp}°C — ${description}`;
+    document.getElementById("meteo-conseil").textContent = conseil;
+
+  } catch(e) {
+    // Fallback selon l'heure si pas de connexion
+    const heure = new Date().getHours();
+    let icon, conseil, temp;
+
+    if (heure >= 6 && heure < 12) {
+      icon = "🌤️"; temp = "18°C";
+      conseil = "🌤️ Matinée agréable — trafic normal sur toutes les lignes";
+    } else if (heure >= 12 && heure < 18) {
+      icon = "☀️"; temp = "24°C";
+      conseil = "☀️ Beau temps — tous les transports circulent normalement";
+    } else if (heure >= 18 && heure < 21) {
+      icon = "🌆"; temp = "20°C";
+      conseil = "🌆 Heure de pointe — le métro est plus rapide que le bus";
+    } else {
+      icon = "🌙"; temp = "16°C";
+      conseil = "🌙 Soirée fraîche — derniers départs dans 1h";
+    }
+
+    document.getElementById("meteo-icon").textContent = icon;
+    document.getElementById("meteo-temp").textContent = temp + " — Alger";
+    document.getElementById("meteo-conseil").textContent = conseil;
+  }
+}
+
+chargerMeteo();
+
 function afficherLignes(filtre = "tous") {
   const container = document.getElementById("lignes-container");
   container.innerHTML = "";
