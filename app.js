@@ -139,7 +139,6 @@ function sInscrire() {
   const password = document.getElementById("reg-password").value;
   const confirm = document.getElementById("reg-confirm").value;
 
-  // Validations
   if (!nom || !email || !password || !confirm) {
     afficherErreur("reg", "Veuillez remplir tous les champs."); return;
   }
@@ -153,35 +152,63 @@ function sInscrire() {
     afficherErreur("reg", "Les mots de passe ne correspondent pas."); return;
   }
 
+  // Récupérer les comptes existants
+  let comptes = [];
+  try {
+    comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
+  } catch(e) {
+    comptes = [];
+  }
+
   // Vérifier si email déjà utilisé
-  const comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
   if (comptes.find(c => c.email === email)) {
     afficherErreur("reg", "Cet email est déjà utilisé."); return;
   }
 
-  // Générer un code à 6 chiffres
-  codeConfirmation = Math.floor(100000 + Math.random() * 900000).toString();
-  codeExpiration = Date.now() + 10 * 60 * 1000; // 10 minutes
-  pendingUser = { nom, email, password };
+  // Si EmailJS configuré → envoyer code
+  if (EMAILJS_PUBLIC_KEY !== "VOTRE_PUBLIC_KEY") {
+    codeConfirmation = Math.floor(100000 + Math.random() * 900000).toString();
+    codeExpiration = Date.now() + 10 * 60 * 1000;
+    pendingUser = { nom, email, password };
 
-  // Envoyer l'email
-  const btn = document.querySelector("#form-inscription .btn-primary");
-  btn.textContent = "Envoi en cours...";
-  btn.disabled = true;
+    const btn = document.querySelector("#form-inscription .btn-primary");
+    btn.textContent = "Envoi en cours...";
+    btn.disabled = true;
 
-  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-    nom: nom,
-    email: email,
-    code: codeConfirmation,
-  }).then(() => {
-    btn.textContent = "Créer mon compte →";
-    btn.disabled = false;
-    afficherVerification(email);
-  }).catch(() => {
-    btn.textContent = "Créer mon compte →";
-    btn.disabled = false;
-    afficherErreur("reg", "Erreur d'envoi d'email. Vérifiez votre configuration EmailJS.");
-  });
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      nom, email, code: codeConfirmation,
+    }).then(() => {
+      btn.textContent = "Créer mon compte →";
+      btn.disabled = false;
+      afficherVerification(email);
+    }).catch(() => {
+      btn.textContent = "Créer mon compte →";
+      btn.disabled = false;
+      // Si EmailJS échoue → créer le compte directement
+      creerCompte(nom, email, password);
+    });
+  } else {
+    // Pas de EmailJS configuré → créer directement
+    creerCompte(nom, email, password);
+  }
+}
+
+function creerCompte(nom, email, password) {
+  let comptes = [];
+  try {
+    comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
+  } catch(e) {
+    comptes = [];
+  }
+
+  const user = { nom, email, password, createdAt: new Date().toISOString() };
+  comptes.push(user);
+
+  localStorage.setItem("btc-comptes", JSON.stringify(comptes));
+  localStorage.setItem("btc-user", JSON.stringify({ nom, email }));
+
+  document.getElementById("auth-screen").classList.add("hidden");
+  mettreAJourNavbar({ nom, email });
 }
 
 function afficherVerification(email) {
@@ -254,14 +281,20 @@ function seConnecter() {
     afficherErreur("login", "Veuillez remplir tous les champs."); return;
   }
 
-  const comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
-  
-  // Vérifier d'abord si l'email existe
+  let comptes = [];
+  try {
+    comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
+  } catch(e) {
+    comptes = [];
+  }
+
+  // Vérifier email
   const emailExiste = comptes.find(c => c.email === email);
   if (!emailExiste) {
     afficherErreur("login", "Aucun compte trouvé avec cette adresse email."); return;
   }
-  // Ensuite vérifier le mot de passe
+
+  // Vérifier mot de passe
   const user = comptes.find(c => c.email === email && c.password === password);
   if (!user) {
     afficherErreur("login", "Mot de passe incorrect."); return;
@@ -271,17 +304,31 @@ function seConnecter() {
   document.getElementById("auth-screen").classList.add("hidden");
   mettreAJourNavbar(user);
 }
-// ── Déconnexion ──────────────────────────────────────────────────────────────
+
+function verifierAuth() {
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("btc-user") || "null");
+  } catch(e) {
+    user = null;
+  }
+
+  if (!user) {
+    document.getElementById("auth-screen").classList.remove("hidden");
+  } else {
+    document.getElementById("auth-screen").classList.add("hidden");
+    mettreAJourNavbar(user);
+  }
+}
+
 function seDeconnecter() {
   if (confirm("Voulez-vous vous déconnecter ?")) {
     localStorage.removeItem("btc-user");
     document.getElementById("auth-screen").classList.remove("hidden");
-    document.getElementById("nav-avatar").textContent = "?";
-    document.getElementById("nav-nom").textContent = "";
-
-    // Réinitialiser les formulaires
     document.getElementById("login-email").value = "";
     document.getElementById("login-password").value = "";
+    document.getElementById("nav-avatar").textContent = "?";
+    document.getElementById("nav-nom").textContent = "";
     document.getElementById("form-connexion").classList.remove("hidden");
     document.getElementById("form-inscription").classList.add("hidden");
     document.getElementById("form-verification").classList.add("hidden");
@@ -289,6 +336,7 @@ function seDeconnecter() {
     document.querySelectorAll(".auth-tab")[1].classList.remove("active");
   }
 }
+
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function mettreAJourNavbar(user) {

@@ -4,19 +4,21 @@
   "description": "Transports en commun d'Alger",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F7F5F0",
+  "background_color": "#006B3F",
   "theme_color": "#006B3F",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "https://via.placeholder.com/192/006B3F/FFFFFF?text=BTC",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://via.placeholder.com/512/006B3F/FFFFFF?text=BTC",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
