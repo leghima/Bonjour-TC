@@ -449,15 +449,21 @@ function reinitialiserMotDePasse() {
 function verifierAuth() {
   let user = null;
   try {
-    user = JSON.parse(localStorage.getItem("btc-user") || "null");
+    const data = localStorage.getItem("btc-user");
+    if (data && data !== "null" && data !== "undefined") {
+      user = JSON.parse(data);
+    }
   } catch(e) {
     user = null;
+    localStorage.removeItem("btc-user");
   }
 
-  if (!user) {
-    document.getElementById("auth-screen").classList.remove("hidden");
+  const authScreen = document.getElementById("auth-screen");
+
+  if (!user || !user.email || !user.nom) {
+    authScreen.classList.remove("hidden");
   } else {
-    document.getElementById("auth-screen").classList.add("hidden");
+    authScreen.classList.add("hidden");
     mettreAJourNavbar(user);
   }
 }
