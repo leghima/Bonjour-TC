@@ -1352,7 +1352,7 @@ body {
 
 /* ── METEO ── */
 .meteo-section {
-  background: white;
+  background: rgb(242, 233, 233);
   border-bottom: 1px solid var(--border);
   padding: 12px 0;
 }

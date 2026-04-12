@@ -1,74 +1,346 @@
-// ── Données du réseau ────────────────────────────────────────────────────────
+// ── Calcul automatique des prochains passages ────────────────────────────────
+function calculerProchainPassage(freqPointe, freqNormale) {
+  const maintenant = new Date();
+  const heure = maintenant.getHours();
+  const minutes = maintenant.getMinutes();
+
+  // Heures de pointe : 7h-9h et 17h-19h
+  const estPointe = (heure >= 7 && heure <= 9) || (heure >= 17 && heure <= 19);
+  const freq = estPointe ? freqPointe : freqNormale;
+
+  // Calculer les 3 prochains passages
+  const minutesEcoulees = minutes % freq;
+  const prochainDans = freq - minutesEcoulees;
+  const deuxiemeDans = prochainDans + freq;
+  const troisiemeDans = prochainDans + freq * 2;
+
+  return [
+    prochainDans + " min",
+    deuxiemeDans + " min",
+    troisiemeDans + " min"
+  ];
+}
+ 
 const lignes = [
+  // ── MÉTRO ──────────────────────────────────────────────────────────────────
   {
     id: "M1", type: "metro", nom: "Métro Ligne 1",
     couleur: "#006B3F", status: "ok",
     terminus: "Haï Bainem ↔ Place des Martyrs",
-    stations: ["Haï Bainem","Aïn Naâdja","Bachdjerrah 2","Bachdjerrah 1",
-      "El Harrach Centre","El Harrach Gare","Les Fusillés","Hamma",
-      "Khelifa Boukhalfa","Tafourah Grande Poste","Université",
-      "Place du 1er Mai","Réparation","Bourouba","Place des Martyrs"],
-    horaires: ["3 min","11 min","19 min"],
+    horaire_debut: "05:30", horaire_fin: "22:30",
+    frequence_pointe: "5 min", frequence_normale: "10 min",
+    stations: [
+      "Haï Bainem",
+      "Aïn Naâdja",
+      "Bachdjerrah 2",
+      "Bachdjerrah 1",
+      "El Harrach Centre",
+      "El Harrach Gare",
+      "Les Fusillés",
+      "Hamma",
+      "Khelifa Boukhalfa",
+      "Tafourah Grande Poste",
+      "Université",
+      "Place du 1er Mai",
+      "Réparation",
+      "Bourouba",
+      "Place des Martyrs"
+    ],
+    horaires: calculerProchainPassage(5, 10),
     direction: "Direction → El Harrach"
   },
   {
     id: "M2", type: "metro", nom: "Métro Ligne 2",
-    couleur: "#1565C0", status: "warn",
+    couleur: "#1565C0", status: "ok",
     terminus: "Place du 1er Mai ↔ Aïn Naâdja",
-    stations: ["Place du 1er Mai","Jardin d'Essai","Les Fusillés",
-      "Djamaâ El Djazaïr","Aïn Naâdja"],
-    horaires: ["7 min","15 min","23 min"],
+    horaire_debut: "05:45", horaire_fin: "22:15",
+    frequence_pointe: "6 min", frequence_normale: "12 min",
+    stations: [
+      "Place du 1er Mai",
+      "Jardin d'Essai",
+      "Les Fusillés",
+      "Djamaâ El Djazaïr",
+      "Aïn Naâdja"
+    ],
+    horaires: calculerProchainPassage(6, 12),
     direction: "Direction → Aïn Naâdja"
   },
   {
     id: "M3", type: "metro", nom: "Métro Ligne 3",
     couleur: "#6A0DAD", status: "ok",
     terminus: "Alger Centre ↔ Dar El Beïda",
-    stations: ["Alger Centre","Hussein Dey","Dar El Beïda"],
-    horaires: ["5 min","13 min","21 min"],
+    horaire_debut: "06:00", horaire_fin: "22:00",
+    frequence_pointe: "8 min", frequence_normale: "15 min",
+    stations: [
+      "Alger Centre",
+      "Hussein Dey",
+      "Dar El Beïda"
+    ],
+    horaires: calculerProchainPassage(8, 15),
     direction: "Direction → Dar El Beïda"
   },
+
+  // ── TRAMWAY ─────────────────────────────────────────────────────────────────
   {
     id: "T1", type: "tramway", nom: "Tramway Alger",
     couleur: "#E8A020", status: "ok",
     terminus: "Les Bananiers ↔ Bab Ezzouar",
-    stations: ["Les Bananiers","Mohammadia","Ruisseau","Hamma",
-      "Tafourah Grande Poste","Palais de la Culture",
-      "Dergana","Bordj El Kiffan","Bab Ezzouar"],
-    horaires: ["6 min","14 min","22 min"],
+    horaire_debut: "05:30", horaire_fin: "23:00",
+    frequence_pointe: "7 min", frequence_normale: "12 min",
+    stations: [
+      "Les Bananiers",
+      "El Mohammadia",
+      "Aissat Idir",
+      "Ruisseau",
+      "Hamma",
+      "Tafourah Grande Poste",
+      "Palais de la Culture",
+      "Ahmed Zabana",
+      "Dergana",
+      "Bordj El Kiffan Centre",
+      "Bordj El Kiffan",
+      "Bab Ezzouar Universités",
+      "Bab Ezzouar"
+    ],
+    horaires: calculerProchainPassage(7, 12),
     direction: "Direction → Bab Ezzouar"
   },
   {
     id: "T2", type: "tramway", nom: "Tramway Sétif",
     couleur: "#D4780A", status: "ok",
-    terminus: "Aïn Oulmène ↔ Aïn Abessa",
-    stations: ["Aïn Oulmène","Centre-Ville Sétif","Aïn Abessa"],
-    horaires: ["8 min","16 min","24 min"],
-    direction: "Direction → Aïn Abessa"
+    terminus: "Sétif Centre ↔ Ain Abessa",
+    horaire_debut: "06:00", horaire_fin: "22:00",
+    frequence_pointe: "10 min", frequence_normale: "15 min",
+    stations: [
+      "Sétif Centre",
+      "Université Ferhat Abbas",
+      "Cité Administratif",
+      "El Bez",
+      "Ain Abessa"
+    ],
+    horaires: calculerProchainPassage(10, 15),
+    direction: "Direction → Ain Abessa"
+  },
+  {
+    id: "T3", type: "tramway", nom: "Tramway Oran",
+    couleur: "#C0610A", status: "ok",
+    terminus: "Es Senia ↔ USTO",
+    horaire_debut: "06:00", horaire_fin: "22:00",
+    frequence_pointe: "8 min", frequence_normale: "15 min",
+    stations: [
+      "Es Senia",
+      "Haï Sabah",
+      "Les Amandiers",
+      "Oran Centre",
+      "Château Neuf",
+      "USTO"
+    ],
+    horaires: calculerProchainPassage(8, 15),
+    direction: "Direction → USTO"
+  },
+  {
+    id: "T4", type: "tramway", nom: "Tramway Constantine",
+    couleur: "#7B3F00", status: "ok",
+    terminus: "Ali Mendjeli ↔ Zouaghi",
+    horaire_debut: "06:00", horaire_fin: "22:00",
+    frequence_pointe: "10 min", frequence_normale: "18 min",
+    stations: [
+      "Ali Mendjeli",
+      "Bekira",
+      "Ibn Badis",
+      "Constantine Centre",
+      "Zouaghi"
+    ],
+    horaires: calculerProchainPassage(10, 18),
+    direction: "Direction → Zouaghi"
+  },
+
+  // ── BUS ETUSA ───────────────────────────────────────────────────────────────
+  {
+    id: "1", type: "bus", nom: "Bus Ligne 1",
+    couleur: "#C0392B", status: "ok",
+    terminus: "Place des Martyrs ↔ El Biar",
+    horaire_debut: "05:30", horaire_fin: "21:30",
+    frequence_pointe: "10 min", frequence_normale: "20 min",
+    stations: [
+      "Place des Martyrs", "Grande Poste", "Didouche Mourad",
+      "Télemly", "El Biar"
+    ],
+    horaires: calculerProchainPassage(10, 20),
+    direction: "Direction → El Biar"
+  },
+  {
+    id: "2", type: "bus", nom: "Bus Ligne 2",
+    couleur: "#C0392B", status: "ok",
+    terminus: "Hussein Dey ↔ Bab El Oued",
+    horaire_debut: "05:30", horaire_fin: "21:30",
+    frequence_pointe: "12 min", frequence_normale: "20 min",
+    stations: [
+      "Hussein Dey", "Hamma", "Grande Poste",
+      "Amirouche", "Bab El Oued"
+    ],
+    horaires: calculerProchainPassage(12, 20),
+    direction: "Direction → Bab El Oued"
+  },
+  {
+    id: "3", type: "bus", nom: "Bus Ligne 3",
+    couleur: "#C0392B", status: "ok",
+    terminus: "Place du 1er Mai ↔ Kouba",
+    horaire_debut: "05:45", horaire_fin: "21:00",
+    frequence_pointe: "12 min", frequence_normale: "20 min",
+    stations: [
+      "Place du 1er Mai", "Belouizdad", "Kouba Centre", "Kouba"
+    ],
+    horaires: calculerProchainPassage(12, 20),
+    direction: "Direction → Kouba"
+  },
+  {
+    id: "5", type: "bus", nom: "Bus Ligne 5",
+    couleur: "#A93226", status: "ok",
+    terminus: "Place Audin ↔ Ben Aknoun",
+    horaire_debut: "06:00", horaire_fin: "21:00",
+    frequence_pointe: "15 min", frequence_normale: "25 min",
+    stations: [
+      "Place Audin", "Didouche Mourad", "Hydra", "Ben Aknoun"
+    ],
+    horaires: calculerProchainPassage(15, 25),
+    direction: "Direction → Ben Aknoun"
+  },
+  {
+    id: "11", type: "bus", nom: "Bus Ligne 11",
+    couleur: "#A93226", status: "ok",
+    terminus: "Grande Poste ↔ Bab Ezzouar",
+    horaire_debut: "05:30", horaire_fin: "21:30",
+    frequence_pointe: "10 min", frequence_normale: "18 min",
+    stations: [
+      "Grande Poste", "Hussein Dey", "Dar El Beïda", "Bab Ezzouar"
+    ],
+    horaires: calculerProchainPassage(10, 18),
+    direction: "Direction → Bab Ezzouar"
   },
   {
     id: "21", type: "bus", nom: "Bus Ligne 21",
-    couleur: "#C0392B", status: "ok",
+    couleur: "#A93226", status: "ok",
     terminus: "El Biar ↔ Grande Poste",
-    stations: ["El Biar","Télemly","Didouche Mourad","Grande Poste"],
-    horaires: ["10 min","20 min","30 min"],
+    horaire_debut: "05:30", horaire_fin: "21:30",
+    frequence_pointe: "10 min", frequence_normale: "20 min",
+    stations: [
+      "El Biar", "Télemly", "Didouche Mourad", "Grande Poste"
+    ],
+    horaires: calculerProchainPassage(10, 20),
     direction: "Direction → Grande Poste"
   },
   {
+    id: "26", type: "bus", nom: "Bus Ligne 26",
+    couleur: "#922B21", status: "ok",
+    terminus: "Place des Martyrs ↔ Birtouta",
+    horaire_debut: "06:00", horaire_fin: "20:30",
+    frequence_pointe: "15 min", frequence_normale: "25 min",
+    stations: [
+      "Place des Martyrs", "Belouizdad", "Bachdjerrah",
+      "Birtouta Centre", "Birtouta"
+    ],
+    horaires: calculerProchainPassage(15, 25),
+    direction: "Direction → Birtouta"
+  },
+  {
     id: "34", type: "bus", nom: "Bus Ligne 34",
-    couleur: "#A93226", status: "warn",
+    couleur: "#922B21", status: "warn",
     terminus: "Bab El Oued ↔ Hussein Dey",
-    stations: ["Bab El Oued","Place des Martyrs","Hussein Dey"],
-    horaires: ["15 min","25 min","40 min"],
+    horaire_debut: "05:30", horaire_fin: "21:00",
+    frequence_pointe: "12 min", frequence_normale: "20 min",
+    stations: [
+      "Bab El Oued", "Grande Poste", "Hamma", "Hussein Dey"
+    ],
+    horaires: calculerProchainPassage(12, 20),
     direction: "Direction → Hussein Dey"
   },
   {
+    id: "35", type: "bus", nom: "Bus Ligne 35",
+    couleur: "#922B21", status: "ok",
+    terminus: "Place du 1er Mai ↔ Bouzaréah",
+    horaire_debut: "06:00", horaire_fin: "21:00",
+    frequence_pointe: "15 min", frequence_normale: "25 min",
+    stations: [
+      "Place du 1er Mai", "Grande Poste", "Télemly",
+      "El Biar", "Bouzaréah"
+    ],
+    horaires: calculerProchainPassage(15, 25),
+    direction: "Direction → Bouzaréah"
+  },
+  {
+    id: "42", type: "bus", nom: "Bus Ligne 42",
+    couleur: "#7B241C", status: "ok",
+    terminus: "Grande Poste ↔ Hydra",
+    horaire_debut: "06:00", horaire_fin: "21:00",
+    frequence_pointe: "12 min", frequence_normale: "20 min",
+    stations: [
+      "Grande Poste", "Amirouche", "Coopérative El Feth", "Hydra"
+    ],
+    horaires: calculerProchainPassage(12, 20),
+    direction: "Direction → Hydra"
+  },
+  {
+    id: "45", type: "bus", nom: "Bus Ligne 45",
+    couleur: "#7B241C", status: "ok",
+    terminus: "Place Audin ↔ Dely Ibrahim",
+    horaire_debut: "06:00", horaire_fin: "21:00",
+    frequence_pointe: "15 min", frequence_normale: "25 min",
+    stations: [
+      "Place Audin", "Ben Aknoun", "Chéraga", "Dely Ibrahim"
+    ],
+    horaires: calculerProchainPassage(15, 25),
+    direction: "Direction → Dely Ibrahim"
+  },
+  {
+    id: "50", type: "bus", nom: "Bus Ligne 50",
+    couleur: "#7B241C", status: "ok",
+    terminus: "Grande Poste ↔ Aïn Taya",
+    horaire_debut: "05:30", horaire_fin: "20:30",
+    frequence_pointe: "20 min", frequence_normale: "30 min",
+    stations: [
+      "Grande Poste", "Hussein Dey", "Bordj El Kiffan",
+      "Rouïba", "Aïn Taya"
+    ],
+    horaires: calculerProchainPassage(20, 30),
+    direction: "Direction → Aïn Taya"
+  },
+  {
     id: "55", type: "bus", nom: "Bus Ligne 55",
-    couleur: "#922B21", status: "err",
+    couleur: "#6E2518", status: "err",
     terminus: "Bir Mourad Raïs ↔ Kouba",
-    stations: ["Bir Mourad Raïs","Hydra","Kouba"],
-    horaires: ["—","—","—"],
+    horaire_debut: "06:00", horaire_fin: "21:00",
+    frequence_pointe: "15 min", frequence_normale: "25 min",
+    stations: [
+      "Bir Mourad Raïs", "Hydra", "Kouba"
+    ],
+    horaires: ["—", "—", "—"],
     direction: "Service interrompu"
+  },
+  {
+    id: "60", type: "bus", nom: "Bus Ligne 60",
+    couleur: "#6E2518", status: "ok",
+    terminus: "Place des Martyrs ↔ Douéra",
+    horaire_debut: "05:30", horaire_fin: "20:30",
+    frequence_pointe: "20 min", frequence_normale: "30 min",
+    stations: [
+      "Place des Martyrs", "Belouizdad", "Birtouta", "Douéra"
+    ],
+    horaires: calculerProchainPassage(20, 30),
+    direction: "Direction → Douéra"
+  },
+  {
+    id: "66", type: "bus", nom: "Bus Ligne 66",
+    couleur: "#6E2518", status: "ok",
+    terminus: "Grande Poste ↔ Reghaia",
+    horaire_debut: "05:30", horaire_fin: "20:00",
+    frequence_pointe: "20 min", frequence_normale: "35 min",
+    stations: [
+      "Grande Poste", "Hussein Dey", "Rouïba",
+      "Reghaïa Centre", "Reghaia"
+    ],
+    horaires: calculerProchainPassage(20, 35),
+    direction: "Direction → Reghaia"
   }
 ];
 // ── AUTHENTIFICATION ─────────────────────────────────────────────────────────
@@ -639,6 +911,9 @@ async function chargerMeteo() {
 }
 
 chargerMeteo();
+
+// Actualiser la météo toutes les 30 minutes
+setInterval(chargerMeteo, 30 * 60 * 1000);
 
 function afficherLignes(filtre = "tous") {
   const container = document.getElementById("lignes-container");
