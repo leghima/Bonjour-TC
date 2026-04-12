@@ -1,4 +1,4 @@
-const CACHE = "bonjour-tc-v3";
+const CACHE = "bonjour-tc-v4";
 const FICHIERS = ["/", "/index.html", "/style.css", "/app.js"];
 
 self.addEventListener("install", e => {

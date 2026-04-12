@@ -305,6 +305,147 @@ function seConnecter() {
   mettreAJourNavbar(user);
 }
 
+// ── MOT DE PASSE OUBLIÉ ──────────────────────────────────────────────────────
+let resetCode = null;
+let resetExpiration = null;
+let resetEmail = null;
+
+function afficherOublie() {
+  document.getElementById("form-connexion").classList.add("hidden");
+  document.getElementById("form-inscription").classList.add("hidden");
+  document.getElementById("form-verification").classList.add("hidden");
+  document.getElementById("form-reset").classList.add("hidden");
+  document.getElementById("form-oublie").classList.remove("hidden");
+}
+
+function envoyerCodeReset() {
+  const email = document.getElementById("oublie-email").value.trim();
+
+  if (!email) {
+    afficherErreur("oublie", "Veuillez entrer votre adresse email."); return;
+  }
+
+  // Vérifier si l'email existe
+  let comptes = [];
+  try {
+    comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
+  } catch(e) { comptes = []; }
+
+  const userExiste = comptes.find(c => c.email === email);
+  if (!userExiste) {
+    afficherErreur("oublie", "Aucun compte trouvé avec cette adresse email."); return;
+  }
+
+  // Générer le code
+  resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+  resetExpiration = Date.now() + 10 * 60 * 1000;
+  resetEmail = email;
+
+  // Si EmailJS configuré → envoyer email
+  if (EMAILJS_PUBLIC_KEY !== "VOTRE_PUBLIC_KEY") {
+    const btn = document.querySelector("#form-oublie .btn-primary");
+    btn.textContent = "Envoi en cours...";
+    btn.disabled = true;
+
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      nom: userExiste.nom,
+      email: email,
+      code: resetCode,
+    }).then(() => {
+      btn.textContent = "Envoyer le code →";
+      btn.disabled = false;
+      afficherFormulaireReset(email);
+    }).catch(() => {
+      btn.textContent = "Envoyer le code →";
+      btn.disabled = false;
+      // Si EmailJS pas configuré → afficher le code directement (mode dev)
+      alert("Code de réinitialisation (mode dev) : " + resetCode);
+      afficherFormulaireReset(email);
+    });
+  } else {
+    // Mode dev sans EmailJS
+    alert("Code de réinitialisation (mode dev) : " + resetCode);
+    afficherFormulaireReset(email);
+  }
+}
+
+function afficherFormulaireReset(email) {
+  document.getElementById("form-oublie").classList.add("hidden");
+  document.getElementById("form-reset").classList.remove("hidden");
+
+  // Indicateur force mot de passe
+  const pwd = document.getElementById("reset-password");
+  const confirm = document.getElementById("reset-confirm");
+
+  pwd.addEventListener("input", () => {
+    const el = document.getElementById("reset-strength");
+    const v = pwd.value;
+    if (v.length === 0) { el.textContent = ""; return; }
+    if (v.length < 6) { el.textContent = "⚠️ Trop court"; el.style.color = "#C0392B"; }
+    else if (v.length < 10) { el.textContent = "✓ Correct"; el.style.color = "#E8A020"; }
+    else { el.textContent = "✓✓ Fort"; el.style.color = "#006B3F"; }
+  });
+
+  confirm.addEventListener("input", () => {
+    const el = document.getElementById("reset-match");
+    if (confirm.value.length === 0) { el.textContent = ""; return; }
+    if (confirm.value === pwd.value) {
+      el.textContent = "✓ Les mots de passe correspondent";
+      el.style.color = "#006B3F";
+    } else {
+      el.textContent = "✗ Ne correspondent pas";
+      el.style.color = "#C0392B";
+    }
+  });
+}
+
+function reinitialiserMotDePasse() {
+  const code = document.getElementById("reset-code").value.trim();
+  const newPassword = document.getElementById("reset-password").value;
+  const confirm = document.getElementById("reset-confirm").value;
+
+  if (!code) {
+    afficherErreur("reset", "Entrez le code reçu par email."); return;
+  }
+  if (Date.now() > resetExpiration) {
+    afficherErreur("reset", "Code expiré. Recommencez."); return;
+  }
+  if (code !== resetCode) {
+    afficherErreur("reset", "Code incorrect."); return;
+  }
+  if (newPassword.length < 6) {
+    afficherErreur("reset", "Le mot de passe doit contenir au moins 6 caractères."); return;
+  }
+  if (newPassword !== confirm) {
+    afficherErreur("reset", "Les mots de passe ne correspondent pas."); return;
+  }
+
+  // Mettre à jour le mot de passe
+  let comptes = [];
+  try {
+    comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
+  } catch(e) { comptes = []; }
+
+  const index = comptes.findIndex(c => c.email === resetEmail);
+  if (index !== -1) {
+    comptes[index].password = newPassword;
+    localStorage.setItem("btc-comptes", JSON.stringify(comptes));
+  }
+
+  afficherSucces("reset", "Mot de passe modifié avec succès !");
+
+  // Rediriger vers connexion après 2 secondes
+  setTimeout(() => {
+    document.getElementById("form-reset").classList.add("hidden");
+    document.getElementById("form-connexion").classList.remove("hidden");
+    document.querySelectorAll(".auth-tab")[0].classList.add("active");
+    document.querySelectorAll(".auth-tab")[1].classList.remove("active");
+    document.getElementById("login-email").value = resetEmail;
+    resetCode = null;
+    resetEmail = null;
+  }, 2000);
+}
+
 function verifierAuth() {
   let user = null;
   try {

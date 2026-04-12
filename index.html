@@ -42,6 +42,7 @@
       </div>
       <div class="form-group">
         <label>Mot de passe</label>
+        <p class="auth-forgot"><a onclick="afficherOublie()">Mot de passe oublié ?</a></p>
         <input type="password" id="login-password" class="form-input" placeholder="••••••••"/>
       </div>
       <button class="btn-primary" onclick="seConnecter()">Se connecter →</button>
@@ -95,6 +96,49 @@
     </div>
 
   </div>
+</div>
+
+<!-- MOT DE PASSE OUBLIE -->
+<div id="form-oublie" class="auth-form hidden">
+  <div class="verif-header">
+    <div class="verif-icon">🔑</div>
+    <h4>Mot de passe oublié</h4>
+    <p>Entrez votre email pour recevoir un code de réinitialisation</p>
+  </div>
+  <div id="oublie-erreur" class="auth-erreur"></div>
+  <div id="oublie-succes" class="auth-succes"></div>
+  <div class="form-group">
+    <label>Adresse email</label>
+    <input type="email" id="oublie-email" class="form-input" placeholder="votre@email.com"/>
+  </div>
+  <button class="btn-primary" onclick="envoyerCodeReset()">Envoyer le code →</button>
+  <p class="auth-note"><a onclick="switchAuth('connexion', document.querySelectorAll('.auth-tab')[0])">← Retour à la connexion</a></p>
+</div>
+
+<!-- NOUVEAU MOT DE PASSE -->
+<div id="form-reset" class="auth-form hidden">
+  <div class="verif-header">
+    <div class="verif-icon">🔒</div>
+    <h4>Réinitialiser le mot de passe</h4>
+    <p>Entrez le code reçu par email</p>
+  </div>
+  <div id="reset-erreur" class="auth-erreur"></div>
+  <div id="reset-succes" class="auth-succes"></div>
+  <div class="form-group">
+    <label>Code de confirmation</label>
+    <input type="text" id="reset-code" class="form-input code-input" placeholder="123456" maxlength="6"/>
+  </div>
+  <div class="form-group">
+    <label>Nouveau mot de passe</label>
+    <input type="password" id="reset-password" class="form-input" placeholder="Minimum 6 caractères"/>
+    <div id="reset-strength" class="password-strength"></div>
+  </div>
+  <div class="form-group">
+    <label>Confirmer le mot de passe</label>
+    <input type="password" id="reset-confirm" class="form-input" placeholder="••••••••"/>
+    <div id="reset-match" class="password-match"></div>
+  </div>
+  <button class="btn-primary" onclick="reinitialiserMotDePasse()">Confirmer →</button>
 </div>
 
   <!-- NAVBAR -->

@@ -1322,3 +1322,18 @@ body {
   font-weight: 500;
   height: 16px;
 }
+
+.auth-forgot {
+  text-align: right;
+  font-size: 12px;
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+
+.auth-forgot a {
+  color: #006B3F;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.auth-forgot a:hover { text-decoration: underline; }
