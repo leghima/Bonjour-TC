@@ -1105,12 +1105,24 @@ body {
 .auth-overlay {
   position: fixed;
   inset: 0;
-  background: #006B3F;
+  background: url('gare-alger.jpg') center/cover no-repeat;
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+}
+
+.auth-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 60, 30, 0.55);
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
 }
 
 .auth-overlay.hidden { display: none; }
