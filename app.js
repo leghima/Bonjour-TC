@@ -1232,14 +1232,22 @@ const stationsGPS = {
   "Bab Ezzouar":            [36.7280, 3.1520],
 };
 
+// ── Carte Leaflet ────────────────────────────────────────────────────────────
+let mapInstance = null;
+let userMarker = null;
+let routeLayer = null;
+let userPosition = null;
+
 function initCarte() {
   const map = L.map("map", { zoomControl: true }).setView([36.752, 3.085], 13);
+  mapInstance = map;
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
     maxZoom: 18,
   }).addTo(map);
 
+  // Tracer les lignes et stations
   lignes.forEach(ligne => {
     const coordsLigne = ligne.stations
       .filter(s => stationsGPS[s])
@@ -1267,19 +1275,210 @@ function initCarte() {
         fillOpacity: 1,
       }).addTo(map);
 
+      // Au clic sur station → tracer la route depuis position utilisateur
+      marker.on("click", () => {
+        afficherRouteVersStation(station, coords, ligne);
+      });
+
       marker.bindPopup(`
         <div class="popup-title">${station}</div>
         <div class="popup-ligne">${ligne.nom}</div>
         <div class="popup-times">
           <span class="popup-chip" style="background:${ligne.couleur}">${ligne.horaires[0]}</span>
           <span class="popup-chip" style="background:${ligne.couleur}88">${ligne.horaires[1]}</span>
-          <span class="popup-chip" style="background:${ligne.couleur}55; color:#333">${ligne.horaires[2]}</span>
+          <span class="popup-chip" style="background:${ligne.couleur}55;color:#333">${ligne.horaires[2]}</span>
         </div>
-      `, { maxWidth: 220 });
+        <div style="margin-top:8px;">
+          <button onclick="afficherRouteVersStation('${station}', [${coords}], ${JSON.stringify(ligne).replace(/"/g, '&quot;')})"
+            style="width:100%;padding:6px;background:#006B3F;color:white;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">
+            📍 Itinéraire depuis ma position
+          </button>
+        </div>
+      `, { maxWidth: 240 });
     });
   });
+
+  // Géolocaliser l'utilisateur automatiquement
+  localiserUtilisateur();
 }
 
+function localiserUtilisateur() {
+  if (!navigator.geolocation) {
+    console.log("Géolocalisation non supportée");
+    return;
+  }
+
+  navigator.geolocation.watchPosition(
+    position => {
+      const { latitude, longitude } = position.coords;
+      userPosition = [latitude, longitude];
+
+      // Supprimer l'ancien marker utilisateur
+      if (userMarker) mapInstance.removeLayer(userMarker);
+
+      // Créer un marker animé pour la position utilisateur
+      const userIcon = L.divIcon({
+        className: "",
+        html: `
+          <div style="
+            width: 20px; height: 20px;
+            background: #1565C0;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(21,101,192,0.3);
+            animation: pulse-map 2s infinite;
+          "></div>
+          <style>
+            @keyframes pulse-map {
+              0% { box-shadow: 0 0 0 0 rgba(21,101,192,0.4); }
+              70% { box-shadow: 0 0 0 12px rgba(21,101,192,0); }
+              100% { box-shadow: 0 0 0 0 rgba(21,101,192,0); }
+            }
+          </style>
+        `,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      });
+
+      userMarker = L.marker([latitude, longitude], { icon: userIcon })
+        .addTo(mapInstance)
+        .bindPopup("<b>📍 Vous êtes ici</b>");
+
+      mapInstance.setView([latitude, longitude], 15);
+    },
+    error => {
+      console.log("Erreur géolocalisation :", error.message);
+    },
+    { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+  );
+}
+
+async function afficherRouteVersStation(nomStation, coordsStation, ligne) {
+  if (!userPosition) {
+    alert("Position non disponible. Activez la géolocalisation dans votre navigateur.");
+    return;
+  }
+
+  // Supprimer l'ancienne route si elle existe
+  if (routeLayer) mapInstance.removeLayer(routeLayer);
+
+  const [latUser, lonUser] = userPosition;
+  const [latStation, lonStation] = coordsStation;
+
+  try {
+    // OSRM — API routing gratuite (à pied)
+    const url = `https://router.project-osrm.org/route/v1/foot/${lonUser},${latUser};${lonStation},${latStation}?overview=full&geometries=geojson`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.code !== "Ok") {
+      alert("Impossible de calculer l'itinéraire.");
+      return;
+    }
+
+    const route = data.routes[0];
+    const distanceM = Math.round(route.distance);
+    const dureeMin = Math.round(route.duration / 60);
+    const geometry = route.geometry;
+
+    // Tracer la route sur la carte
+    routeLayer = L.geoJSON(geometry, {
+      style: {
+        color: "#1565C0",
+        weight: 5,
+        opacity: 0.8,
+        dashArray: "10 6",
+        lineJoin: "round",
+      }
+    }).addTo(mapInstance);
+
+    // Ajuster la vue pour voir toute la route
+    mapInstance.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+    // Afficher un popup sur la station avec le temps
+    const distanceTexte = distanceM < 1000
+      ? `${distanceM} m`
+      : `${(distanceM / 1000).toFixed(1)} km`;
+
+    L.popup()
+      .setLatLng(coordsStation)
+      .setContent(`
+        <div class="popup-title">${nomStation}</div>
+        <div class="popup-ligne">${ligne.nom}</div>
+        <div style="margin:10px 0;padding:10px;background:#E6F4EE;border-radius:8px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:#006B3F;font-family:sans-serif;">
+            🚶 ${dureeMin} min
+          </div>
+          <div style="font-size:12px;color:#6B6B6B;margin-top:2px;">
+            ${distanceTexte} à pied
+          </div>
+        </div>
+        <div class="popup-times">
+          <span class="popup-chip" style="background:${ligne.couleur}">
+            Prochain : ${ligne.horaires[0]}
+          </span>
+        </div>
+        <button onclick="supprimerRoute()"
+          style="width:100%;margin-top:8px;padding:6px;background:#FDECEC;color:#C0392B;border:1px solid #F09595;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">
+          ✕ Supprimer l'itinéraire
+        </button>
+      `)
+      .openOn(mapInstance);
+
+  } catch(e) {
+    // Fallback si OSRM indisponible : ligne droite avec distance estimée
+    if (routeLayer) mapInstance.removeLayer(routeLayer);
+
+    routeLayer = L.polyline([userPosition, coordsStation], {
+      color: "#1565C0",
+      weight: 4,
+      opacity: 0.7,
+      dashArray: "8 5",
+    }).addTo(mapInstance);
+
+    mapInstance.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+    // Calculer distance à vol d'oiseau
+    const R = 6371000;
+    const dLat = (coordsStation[0] - userPosition[0]) * Math.PI / 180;
+    const dLon = (coordsStation[1] - userPosition[1]) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+      Math.cos(userPosition[0]*Math.PI/180) *
+      Math.cos(coordsStation[0]*Math.PI/180) *
+      Math.sin(dLon/2)**2;
+    const distM = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    const dureeMin = Math.round(distM / 80);
+
+    L.popup()
+      .setLatLng(coordsStation)
+      .setContent(`
+        <div class="popup-title">${nomStation}</div>
+        <div class="popup-ligne">${ligne.nom}</div>
+        <div style="margin:10px 0;padding:10px;background:#E6F4EE;border-radius:8px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:#006B3F;">
+            🚶 ~${dureeMin} min
+          </div>
+          <div style="font-size:12px;color:#6B6B6B;margin-top:2px;">
+            ${distM < 1000 ? distM + " m" : (distM/1000).toFixed(1) + " km"} à pied
+          </div>
+        </div>
+        <button onclick="supprimerRoute()"
+          style="width:100%;margin-top:8px;padding:6px;background:#FDECEC;color:#C0392B;border:1px solid #F09595;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">
+          ✕ Supprimer l'itinéraire
+        </button>
+      `)
+      .openOn(mapInstance);
+  }
+}
+
+function supprimerRoute() {
+  if (routeLayer) {
+    mapInstance.removeLayer(routeLayer);
+    routeLayer = null;
+  }
+  mapInstance.closePopup();
+}
 // ── Initialisation ───────────────────────────────────────────────────────────
 afficherLignes();
 afficherHoraires();
