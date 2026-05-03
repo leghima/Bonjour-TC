@@ -1,3 +1,5 @@
+const API = "http://localhost:3000/api"; 
+
 // ── Calcul automatique des prochains passages ────────────────────────────────
 function calculerProchainPassage(freqPointe, freqNormale) {
   const maintenant = new Date();
@@ -405,7 +407,7 @@ function switchAuth(mode, btn) {
 }
 
 // ── Inscription ──────────────────────────────────────────────────────────────
-function sInscrire() {
+async function sInscrire() {
   const nom = document.getElementById("reg-nom").value.trim();
   const email = document.getElementById("reg-email").value.trim();
   const password = document.getElementById("reg-password").value;
@@ -414,54 +416,27 @@ function sInscrire() {
   if (!nom || !email || !password || !confirm) {
     afficherErreur("reg", "Veuillez remplir tous les champs."); return;
   }
-  if (!email.includes("@") || !email.includes(".")) {
-    afficherErreur("reg", "Adresse email invalide."); return;
-  }
-  if (password.length < 6) {
-    afficherErreur("reg", "Le mot de passe doit contenir au moins 6 caractères."); return;
-  }
   if (password !== confirm) {
     afficherErreur("reg", "Les mots de passe ne correspondent pas."); return;
   }
 
-  // Récupérer les comptes existants
-  let comptes = [];
   try {
-    comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
-  } catch(e) {
-    comptes = [];
-  }
-
-  // Vérifier si email déjà utilisé
-  if (comptes.find(c => c.email === email)) {
-    afficherErreur("reg", "Cet email est déjà utilisé."); return;
-  }
-
-  // Si EmailJS configuré → envoyer code
-  if (EMAILJS_PUBLIC_KEY !== "VOTRE_PUBLIC_KEY") {
-    codeConfirmation = Math.floor(100000 + Math.random() * 900000).toString();
-    codeExpiration = Date.now() + 10 * 60 * 1000;
-    pendingUser = { nom, email, password };
-
-    const btn = document.querySelector("#form-inscription .btn-primary");
-    btn.textContent = "Envoi en cours...";
-    btn.disabled = true;
-
-    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      nom, email, code: codeConfirmation,
-    }).then(() => {
-      btn.textContent = "Créer mon compte →";
-      btn.disabled = false;
-      afficherVerification(email);
-    }).catch(() => {
-      btn.textContent = "Créer mon compte →";
-      btn.disabled = false;
-      // Si EmailJS échoue → créer le compte directement
-      creerCompte(nom, email, password);
+    const res = await fetch(`${API}/auth/inscription`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nom, email, password }),
     });
-  } else {
-    // Pas de EmailJS configuré → créer directement
-    creerCompte(nom, email, password);
+    const data = await res.json();
+
+    if (!res.ok) {
+      afficherErreur("reg", data.erreur); return;
+    }
+
+    pendingUser = { nom, email, password };
+    afficherVerification(email);
+
+  } catch(e) {
+    afficherErreur("reg", "Erreur réseau. Vérifiez votre connexion.");
   }
 }
 
@@ -504,30 +479,30 @@ function afficherVerification(email) {
   }, 1000);
 }
 
-function verifierCode() {
+async function verifierCode() {
   const code = document.getElementById("verif-code").value.trim();
+  const email = pendingUser?.email;
 
-  if (!code) {
-    afficherErreur("verif", "Entrez le code reçu par email."); return;
+  try {
+    const res = await fetch(`${API}/auth/confirmer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      afficherErreur("verif", data.erreur); return;
+    }
+
+    localStorage.setItem("btc-token", data.token);
+    localStorage.setItem("btc-user", JSON.stringify(data.user));
+    document.getElementById("auth-screen").classList.add("hidden");
+    mettreAJourNavbar(data.user);
+
+  } catch(e) {
+    afficherErreur("verif", "Erreur réseau.");
   }
-  if (Date.now() > codeExpiration) {
-    afficherErreur("verif", "Code expiré. Recommencez l'inscription."); return;
-  }
-  if (code !== codeConfirmation) {
-    afficherErreur("verif", "Code incorrect. Vérifiez votre email."); return;
-  }
-
-  // Code correct — créer le compte
-  const comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
-  comptes.push({ ...pendingUser, createdAt: new Date().toISOString() });
-  localStorage.setItem("btc-comptes", JSON.stringify(comptes));
-  localStorage.setItem("btc-user", JSON.stringify({ nom: pendingUser.nom, email: pendingUser.email }));
-
-  document.getElementById("auth-screen").classList.add("hidden");
-  mettreAJourNavbar({ nom: pendingUser.nom });
-
-  codeConfirmation = null;
-  pendingUser = null;
 }
 
 function renvoyerCode() {
@@ -545,36 +520,30 @@ function renvoyerCode() {
 }
 
 // ── Connexion ────────────────────────────────────────────────────────────────
-function seConnecter() {
+async function seConnecter() {
   const email = document.getElementById("login-email").value.trim();
   const password = document.getElementById("login-password").value;
 
-  if (!email || !password) {
-    afficherErreur("login", "Veuillez remplir tous les champs."); return;
-  }
-
-  let comptes = [];
   try {
-    comptes = JSON.parse(localStorage.getItem("btc-comptes") || "[]");
+    const res = await fetch(`${API}/auth/connexion`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      afficherErreur("login", data.erreur); return;
+    }
+
+    localStorage.setItem("btc-token", data.token);
+    localStorage.setItem("btc-user", JSON.stringify(data.user));
+    document.getElementById("auth-screen").classList.add("hidden");
+    mettreAJourNavbar(data.user);
+
   } catch(e) {
-    comptes = [];
+    afficherErreur("login", "Erreur réseau.");
   }
-
-  // Vérifier email
-  const emailExiste = comptes.find(c => c.email === email);
-  if (!emailExiste) {
-    afficherErreur("login", "Aucun compte trouvé avec cette adresse email."); return;
-  }
-
-  // Vérifier mot de passe
-  const user = comptes.find(c => c.email === email && c.password === password);
-  if (!user) {
-    afficherErreur("login", "Mot de passe incorrect."); return;
-  }
-
-  localStorage.setItem("btc-user", JSON.stringify({ nom: user.nom, email: user.email }));
-  document.getElementById("auth-screen").classList.add("hidden");
-  mettreAJourNavbar(user);
 }
 
 // ── MOT DE PASSE OUBLIÉ ──────────────────────────────────────────────────────
@@ -1529,48 +1498,29 @@ function ouvrirPaiement() {
   document.getElementById("modal-paiement").classList.remove("hidden");
 }
 
-function confirmerPaiement() {
-  const num = document.getElementById("baridi-num").value.trim();
-  const pin = document.getElementById("baridi-pin").value.trim();
+async function confirmerPaiement() {
+  const token = localStorage.getItem("btc-token");
 
-  if (!num || num.length < 10) {
-    alert("Numéro Baridi Mob invalide.");
-    return;
-  }
-  if (!pin || pin.length < 4) {
-    alert("Code PIN invalide.");
-    return;
-  }
-
-  // Simuler un traitement
-  const btn = document.querySelector("#modal-paiement .btn-primary");
-  btn.textContent = "Traitement en cours...";
-  btn.disabled = true;
-
-  setTimeout(() => {
-    fermerModal("modal-paiement");
-    btn.textContent = "Confirmer le paiement";
-    btn.disabled = false;
-
-    // Créer le billet
-    const billet = {
-      id: "BTC-" + Date.now(),
+  const res = await fetch(`${API}/billets/acheter`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({
       type: typeBillet,
-      label: LABELS[typeBillet],
       ligne: document.getElementById("ligne-billet").value,
-      nom: document.getElementById("nom-voyageur").value.trim(),
       date: document.getElementById("date-voyage").value,
+      quantite,
       prix: PRIX[typeBillet] * quantite,
-      quantite: quantite,
-      timestamp: new Date().toISOString(),
-    };
+    }),
+  });
 
-    billets.unshift(billet);
-    localStorage.setItem("billets", JSON.stringify(billets));
+  const data = await res.json();
+  if (!res.ok) { alert(data.erreur); return; }
 
-    afficherMesBillets();
-    afficherQR(billet);
-  }, 1800);
+  afficherQR(data.billet);
+  chargerMesBillets();
 }
 
 function afficherQR(billet) {
@@ -1610,29 +1560,19 @@ function afficherQR(billet) {
   `;
 }
 
-function afficherMesBillets() {
-  const container = document.getElementById("mes-billets-list");
+async function chargerMesBillets() {
+  const token = localStorage.getItem("btc-token");
+  if (!token) return;
 
-  if (billets.length === 0) {
-    container.innerHTML = `
-      <div class="billets-empty">
-        <span>🎫</span>
-        <p>Aucun billet acheté pour l'instant</p>
-      </div>
-    `;
-    return;
+  const res = await fetch(`${API}/billets/mes-billets`, {
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  const data = await res.json();
+
+  if (data.billets) {
+    billets = data.billets;
+    afficherMesBillets();
   }
-
-  container.innerHTML = billets.map(b => `
-    <div class="billet-item" onclick='afficherQR(${JSON.stringify(b)})'>
-      <div class="billet-item-icon" style="background:var(--metro-light)">🎫</div>
-      <div class="billet-item-info">
-        <div class="billet-item-titre">${b.label} — ${b.ligne}</div>
-        <div class="billet-item-sub">${b.nom} · ${new Date(b.date).toLocaleDateString("fr-DZ")}</div>
-      </div>
-      <span class="billet-item-badge">${b.prix} DA</span>
-    </div>
-  `).join("");
 }
 
 function fermerModal(id) {
