@@ -428,16 +428,11 @@ async function sInscrire() {
       body: JSON.stringify({ nom, email, password }),
     });
     const data = await res.json();
-
-    if (!res.ok) {
-      afficherErreur("reg", data.erreur); return;
-    }
-
+    if (!res.ok) { afficherErreur("reg", data.erreur); return; }
     pendingUser = { nom, email, password };
     afficherVerification(email);
-
   } catch(e) {
-    afficherErreur("reg", "Erreur réseau. Vérifiez votre connexion.");
+    afficherErreur("reg", "Erreur réseau.");
   }
 }
 
@@ -491,16 +486,11 @@ async function verifierCode() {
       body: JSON.stringify({ email, code }),
     });
     const data = await res.json();
-
-    if (!res.ok) {
-      afficherErreur("verif", data.erreur); return;
-    }
-
+    if (!res.ok) { afficherErreur("verif", data.erreur); return; }
     localStorage.setItem("btc-token", data.token);
     localStorage.setItem("btc-user", JSON.stringify(data.user));
     document.getElementById("auth-screen").classList.add("hidden");
     mettreAJourNavbar(data.user);
-
   } catch(e) {
     afficherErreur("verif", "Erreur réseau.");
   }
@@ -525,6 +515,10 @@ async function seConnecter() {
   const email = document.getElementById("login-email").value.trim();
   const password = document.getElementById("login-password").value;
 
+  if (!email || !password) {
+    afficherErreur("login", "Veuillez remplir tous les champs."); return;
+  }
+
   try {
     const res = await fetch(`${API}/auth/connexion`, {
       method: "POST",
@@ -532,16 +526,11 @@ async function seConnecter() {
       body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
-
-    if (!res.ok) {
-      afficherErreur("login", data.erreur); return;
-    }
-
+    if (!res.ok) { afficherErreur("login", data.erreur); return; }
     localStorage.setItem("btc-token", data.token);
     localStorage.setItem("btc-user", JSON.stringify(data.user));
     document.getElementById("auth-screen").classList.add("hidden");
     mettreAJourNavbar(data.user);
-
   } catch(e) {
     afficherErreur("login", "Erreur réseau.");
   }
@@ -1500,28 +1489,62 @@ function ouvrirPaiement() {
 }
 
 async function confirmerPaiement() {
+  const num = document.getElementById("baridi-num").value.trim();
+  const pin = document.getElementById("baridi-pin").value.trim();
+
+  if (!num || num.length < 10) { alert("Numéro Baridi Mob invalide."); return; }
+  if (!pin || pin.length < 4) { alert("Code PIN invalide."); return; }
+
   const token = localStorage.getItem("btc-token");
+  const btn = document.querySelector("#modal-paiement .btn-primary");
+  btn.textContent = "Traitement en cours...";
+  btn.disabled = true;
 
-  const res = await fetch(`${API}/billets/acheter`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      type: typeBillet,
-      ligne: document.getElementById("ligne-billet").value,
-      date: document.getElementById("date-voyage").value,
-      quantite,
-      prix: PRIX[typeBillet] * quantite,
-    }),
-  });
+  try {
+    const res = await fetch(`${API}/billets/acheter`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        type: typeBillet,
+        ligne: document.getElementById("ligne-billet").value,
+        date: document.getElementById("date-voyage").value,
+        quantite,
+        prix: PRIX[typeBillet] * quantite,
+      }),
+    });
+    const data = await res.json();
+    btn.textContent = "Confirmer le paiement";
+    btn.disabled = false;
+    if (!res.ok) { alert(data.erreur); return; }
+    fermerModal("modal-paiement");
+    afficherQR(data.billet);
+    chargerMesBillets();
+  } catch(e) {
+    btn.textContent = "Confirmer le paiement";
+    btn.disabled = false;
+    alert("Erreur réseau.");
+  }
+}
 
-  const data = await res.json();
-  if (!res.ok) { alert(data.erreur); return; }
+async function chargerMesBillets() {
+  const token = localStorage.getItem("btc-token");
+  if (!token) return;
 
-  afficherQR(data.billet);
-  chargerMesBillets();
+  try {
+    const res = await fetch(`${API}/billets/mes-billets`, {
+      headers: { "Authorization": `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (data.billets) {
+      billets = data.billets;
+      afficherMesBillets();
+    }
+  } catch(e) {
+    console.log("Erreur chargement billets");
+  }
 }
 
 function afficherQR(billet) {
