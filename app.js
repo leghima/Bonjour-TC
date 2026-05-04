@@ -1,5 +1,5 @@
 const API = "https://bonjour-tc-backend.onrender.com/";
-const API = "http://localhost:3000/api"; 
+
 
 // ── Calcul automatique des prochains passages ────────────────────────────────
 function calculerProchainPassage(freqPointe, freqNormale) {
