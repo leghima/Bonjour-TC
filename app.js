@@ -1,4 +1,4 @@
-const API = "https://bonjour-tc-backend.onrender.com/";
+const API = "https://bonjour-tc-backend.onrender.com";
 
 
 // ── Calcul automatique des prochains passages ────────────────────────────────
