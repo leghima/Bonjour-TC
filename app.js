@@ -1,4 +1,4 @@
-const API = "https://bonjour-tc-backend.onrender.com/api/auth/connexion";
+const API = "https://bonjour-tc-backend.onrender.com/api";
 
 // ── Calcul automatique des prochains passages ────────────────────────────────
 function calculerProchainPassage(freqPointe, freqNormale) {
