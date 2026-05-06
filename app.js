@@ -427,6 +427,7 @@ async function sInscrire() {
       body: JSON.stringify({ nom, email, password }),
     });
     const data = await res.json();
+    console.log(data)
     if (!res.ok) { afficherErreur("reg", data.erreur); return; }
     pendingUser = { nom, email, password };
     afficherVerification(email);
