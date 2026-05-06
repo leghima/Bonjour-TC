@@ -1,4 +1,4 @@
-const API = "https://bonjour-tc-backend.onrender.com/api";
+const API = "https://bonjour-tc-backend-production.up.railway.app/api";
 
 // ── Calcul automatique des prochains passages ────────────────────────────────
 function calculerProchainPassage(freqPointe, freqNormale) {
