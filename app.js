@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 const API = "https://bonjour-tc-backend.onrender.com";
+=======
+const API = "https://bonjour-tc-backend-production.up.railway.app/api";
+>>>>>>> 316930c6ba50b4558eae068dc73ceda2605f0c67
 
 // ── Calcul automatique des prochains passages ────────────────────────────────
 function calculerProchainPassage(freqPointe, freqNormale) {
@@ -427,6 +431,7 @@ async function sInscrire() {
       body: JSON.stringify({ nom, email, password }),
     });
     const data = await res.json();
+    console.log(data)
     if (!res.ok) { afficherErreur("reg", data.erreur); return; }
     pendingUser = { nom, email, password };
     afficherVerification(email);
