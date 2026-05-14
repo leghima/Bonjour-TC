@@ -1,4 +1,3 @@
-const API = "https://bonjour-tc-backend.onrender.com";
 const API = "https://bonjour-tc-backend-production.up.railway.app/api";
 
 // ── Calcul automatique des prochains passages ────────────────────────────────
