@@ -511,30 +511,35 @@ function renvoyerCode() {
 }
 
 // ── Connexion ────────────────────────────────────────────────────────────────
-async function seConnecter() {
-  const email = document.getElementById("login-email").value.trim();
-  const password = document.getElementById("login-password").value;
+  async function seConnecter() {
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
 
-  if (!email || !password) {
-    afficherErreur("login", "Veuillez remplir tous les champs."); return;
-  }
+    if (!email || !password) {
+      afficherErreur("login", "Veuillez remplir tous les champs."); return;
+    }
 
-  try {
-    const res = await fetch(`${API}/auth/connexion`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) { afficherErreur("login", data.erreur); return; }
-    localStorage.setItem("btc-token", data.token);
-    localStorage.setItem("btc-user", JSON.stringify(data.user));
-    document.getElementById("auth-screen").classList.add("hidden");
-    mettreAJourNavbar(data.user);
-  } catch(e) {
-    afficherErreur("login", "Erreur réseau.");
+    try {
+      const res = await fetch(`${API}/auth/connexion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { afficherErreur("login", data.erreur); return; }
+      localStorage.setItem("btc-token", data.token);
+      localStorage.setItem("btc-user", JSON.stringify({
+        id: data.user.id,
+        nom: data.user.nom,
+        email: data.user.email,
+        role: data.user.role || "user"
+}));
+      document.getElementById("auth-screen").classList.add("hidden");
+      mettreAJourNavbar(data.user);
+    } catch(e) {
+      afficherErreur("login", "Erreur réseau.");
+    }
   }
-}
 
 // ── MOT DE PASSE OUBLIÉ ──────────────────────────────────────────────────────
 let resetCode = null;
@@ -721,6 +726,12 @@ function mettreAJourNavbar(user) {
   const initiales = user.nom.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   document.getElementById("nav-avatar").textContent = initiales;
   document.getElementById("nav-nom").textContent = user.nom.split(" ")[0];
+
+  // Afficher le lien admin si l'utilisateur est admin
+  if (user.role === "admin") {
+    const navAdmin = document.getElementById("nav-admin");
+    if (navAdmin) navAdmin.style.display = "block";
+  }
 }
 
 function afficherErreur(prefix, msg) {

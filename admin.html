@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Bonjour TC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🚇</div>
+      <div>
+        <div class="sidebar-logo-text">Bonjour <strong>TC</strong></div>
+        <div class="sidebar-logo-sub">Administration</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="showSection('dashboard', this)">
+        <span class="nav-icon">📊</span>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" onclick="showSection('utilisateurs', this)">
+        <span class="nav-icon">👥</span>
+        <span>Utilisateurs</span>
+      </button>
+      <button class="nav-item" onclick="showSection('lignes', this)">
+        <span class="nav-icon">🚇</span>
+        <span>Lignes</span>
+      </button>
+      <button class="nav-item" onclick="showSection('horaires', this)">
+        <span class="nav-icon">🕐</span>
+        <span>Horaires</span>
+      </button>
+      <button class="nav-item" onclick="showSection('billets', this)">
+        <span class="nav-icon">🎫</span>
+        <span>Billets</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-info">
+        <div class="admin-avatar" id="admin-avatar">A</div>
+        <div>
+          <div class="admin-name" id="admin-name">Admin</div>
+          <div class="admin-role">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="seDeconnecter()">Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- DASHBOARD -->
+    <section id="section-dashboard" class="admin-section active">
+      <div class="section-header">
+        <h1>Dashboard</h1>
+        <p>Vue d'ensemble de l'application</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-value" id="stat-users">—</div>
+          <div class="stat-label">Utilisateurs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎫</div>
+          <div class="stat-value" id="stat-billets">—</div>
+          <div class="stat-label">Billets vendus</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-value" id="stat-revenu">—</div>
+          <div class="stat-label">Revenu total (DA)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🚇</div>
+          <div class="stat-value">23</div>
+          <div class="stat-label">Lignes actives</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-card">
+          <h3>Derniers utilisateurs</h3>
+          <div id="last-users-list"></div>
+        </div>
+        <div class="dashboard-card">
+          <h3>Derniers billets</h3>
+          <div id="last-billets-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UTILISATEURS -->
+    <section id="section-utilisateurs" class="admin-section">
+      <div class="section-header">
+        <h1>Utilisateurs</h1>
+        <p>Gestion des comptes utilisateurs</p>
+      </div>
+
+      <div class="table-card">
+        <div class="table-toolbar">
+          <input type="text" class="search-input" placeholder="Rechercher un utilisateur..." oninput="filtrerUsers(this.value)"/>
+          <span class="table-count" id="users-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="admin-table" id="users-table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Inscrit le</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIGNES -->
+    <section id="section-lignes" class="admin-section">
+      <div class="section-header">
+        <h1>Lignes</h1>
+        <p>Gestion des lignes de transport</p>
+        <button class="btn-add" onclick="ouvrirModalLigne()">+ Ajouter une ligne</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table class="admin-table" id="lignes-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Terminus</th>
+                <th>Horaires</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="lignes-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- HORAIRES -->
+    <section id="section-horaires" class="admin-section">
+      <div class="section-header">
+        <h1>Horaires</h1>
+        <p>Gestion des horaires par ligne</p>
+      </div>
+
+      <div class="horaires-editor">
+        <div class="horaire-select-card">
+          <label>Sélectionner une ligne</label>
+          <select class="form-select" id="horaire-ligne-select" onchange="chargerHoraireLigne(this.value)">
+            <option value="">-- Choisir une ligne --</option>
+          </select>
+        </div>
+
+        <div id="horaire-editor-content" class="hidden">
+          <div class="horaire-form-grid">
+            <div class="form-group">
+              <label>Premier départ</label>
+              <input type="time" class="form-input" id="h-debut"/>
+            </div>
+            <div class="form-group">
+              <label>Dernier départ</label>
+              <input type="time" class="form-input" id="h-fin"/>
+            </div>
+            <div class="form-group">
+              <label>Fréquence heure de pointe (min)</label>
+              <input type="number" class="form-input" id="h-freq-pointe" min="1" max="60"/>
+            </div>
+            <div class="form-group">
+              <label>Fréquence normale (min)</label>
+              <input type="number" class="form-input" id="h-freq-normale" min="1" max="60"/>
+            </div>
+          </div>
+          <button class="btn-save" onclick="sauvegarderHoraire()">Enregistrer les horaires</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BILLETS -->
+    <section id="section-billets" class="admin-section">
+      <div class="section-header">
+        <h1>Billets</h1>
+        <p>Historique de tous les billets achetés</p>
+      </div>
+
+      <div class="table-card">
+        <div class="table-toolbar">
+          <input type="text" class="search-input" placeholder="Rechercher..." oninput="filtrerBillets(this.value)"/>
+          <span class="table-count" id="billets-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Voyageur</th>
+                <th>Ligne</th>
+                <th>Type</th>
+                <th>Date voyage</th>
+                <th>Prix</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody id="billets-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL LIGNE -->
+  <div id="modal-ligne" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-ligne-title">Ajouter une ligne</h3>
+        <button class="modal-close" onclick="fermerModalLigne()">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Identifiant (ex: M1, T1, 21)</label>
+        <input type="text" class="form-input" id="ligne-id" placeholder="M1"/>
+      </div>
+      <div class="form-group">
+        <label>Nom complet</label>
+        <input type="text" class="form-input" id="ligne-nom" placeholder="Métro Ligne 1"/>
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select class="form-select" id="ligne-type">
+          <option value="metro">Métro</option>
+          <option value="tramway">Tramway</option>
+          <option value="bus">Bus</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Couleur</label>
+        <input type="color" class="form-input" id="ligne-couleur" value="#006B3F"/>
+      </div>
+      <div class="form-group">
+        <label>Terminus</label>
+        <input type="text" class="form-input" id="ligne-terminus" placeholder="Station A ↔ Station B"/>
+      </div>
+      <div class="form-group">
+        <label>Stations (séparées par des virgules)</label>
+        <textarea class="form-input" id="ligne-stations" rows="3" placeholder="Station 1, Station 2, Station 3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Premier départ</label>
+        <input type="time" class="form-input" id="ligne-debut" value="05:30"/>
+      </div>
+      <div class="form-group">
+        <label>Dernier départ</label>
+        <input type="time" class="form-input" id="ligne-fin" value="22:30"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalLigne()">Annuler</button>
+        <button class="btn-save" onclick="sauvegarderLigne()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = "https://bonjour-tc-backend.onrender.com/api";
+    let token = localStorage.getItem("btc-token");
+    let currentUser = JSON.parse(localStorage.getItem("btc-user") || "null");
+    let allUsers = [];
+    let allBillets = [];
+    let editingLigneId = null;
+
+    // ── Vérifier accès admin ──────────────────────────────────
+    async function verifierAdmin() {
+      if (!token || !currentUser) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/admin/stats`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.status === 403) {
+          alert("Accès refusé. Vous n'êtes pas administrateur.");
+          window.location.href = "index.html";
+          return;
+        }
+
+        const data = await res.json();
+        document.getElementById("stat-users").textContent = data.totalUsers;
+        document.getElementById("stat-billets").textContent = data.totalBillets;
+        document.getElementById("stat-revenu").textContent = data.totalRevenu.toLocaleString();
+
+        if (currentUser) {
+          document.getElementById("admin-name").textContent = currentUser.nom;
+          document.getElementById("admin-avatar").textContent =
+            currentUser.nom.split(" ").map(n => n[0]).join("").toUpperCase().slice(0,2);
+        }
+
+        chargerUtilisateurs();
+        chargerLignes();
+        chargerBillets();
+
+      } catch(e) {
+        console.error("Erreur:", e);
+      }
+    }
+
+    // ── Navigation sections ───────────────────────────────────
+    function showSection(name, btn) {
+      document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+      document.getElementById(`section-${name}`).classList.add("active");
+      btn.classList.add("active");
+    }
+
+    // ── Charger utilisateurs ──────────────────────────────────
+    async function chargerUtilisateurs() {
+      try {
+        const res = await fetch(`${API}/admin/users`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        allUsers = data.users || [];
+        afficherUsers(allUsers);
+        document.getElementById("users-count").textContent = `${allUsers.length} utilisateurs`;
+
+        // Derniers inscrits pour dashboard
+        const derniers = [...allUsers].slice(0, 5);
+        document.getElementById("last-users-list").innerHTML = derniers.map(u => `
+          <div class="mini-row">
+            <div class="mini-avatar">${u.nom.charAt(0).toUpperCase()}</div>
+            <div>
+              <div class="mini-name">${u.nom}</div>
+              <div class="mini-sub">${u.email}</div>
+            </div>
+            <span class="role-badge ${u.role === 'admin' ? 'role-admin' : 'role-user'}">${u.role || 'user'}</span>
+          </div>
+        `).join("");
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    function afficherUsers(users) {
+      const tbody = document.getElementById("users-tbody");
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div class="table-avatar">${u.nom.charAt(0).toUpperCase()}</div>
+              <span>${u.nom}</span>
+            </div>
+          </td>
+          <td class="text-muted">${u.email}</td>
+          <td>
+            <span class="role-badge ${u.role === 'admin' ? 'role-admin' : 'role-user'}">
+              ${u.role || 'user'}
+            </span>
+          </td>
+          <td class="text-muted">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('fr-FR') : '—'}</td>
+          <td>
+            <div class="action-btns">
+              ${u.role !== 'admin' ?
+                `<button class="btn-action btn-promote" onclick="promouvoirAdmin('${u.id}')">→ Admin</button>` : ''
+              }
+              <button class="btn-action btn-delete" onclick="supprimerUser('${u.id}', '${u.nom}')">Supprimer</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function filtrerUsers(query) {
+      const filtered = allUsers.filter(u =>
+        u.nom.toLowerCase().includes(query.toLowerCase()) ||
+        u.email.toLowerCase().includes(query.toLowerCase())
+      );
+      afficherUsers(filtered);
+    }
+
+    async function supprimerUser(id, nom) {
+      if (!confirm(`Supprimer l'utilisateur "${nom}" ?`)) return;
+      try {
+        const res = await fetch(`${API}/admin/users/${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          chargerUtilisateurs();
+        }
+      } catch(e) { console.error(e); }
+    }
+
+    async function promouvoirAdmin(id) {
+      if (!confirm("Promouvoir cet utilisateur en administrateur ?")) return;
+      try {
+        const res = await fetch(`${API}/admin/users/${id}/role`, {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ role: "admin" })
+        });
+        if (res.ok) chargerUtilisateurs();
+      } catch(e) { console.error(e); }
+    }
+
+    // ── Charger lignes ────────────────────────────────────────
+    async function chargerLignes() {
+      try {
+        const res = await fetch(`${API}/admin/lignes`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const lignes = data.lignes || [];
+
+        // Remplir select horaires
+        const select = document.getElementById("horaire-ligne-select");
+        select.innerHTML = '<option value="">-- Choisir une ligne --</option>' +
+          lignes.map(l => `<option value="${l.id}">${l.nom}</option>`).join("");
+
+        const tbody = document.getElementById("lignes-tbody");
+        tbody.innerHTML = lignes.map(l => `
+          <tr>
+            <td><span class="ligne-badge-sm" style="background:${l.couleur}">${l.id}</span></td>
+            <td><strong>${l.nom}</strong></td>
+            <td><span class="type-pill type-${l.type}">${l.type}</span></td>
+            <td class="text-muted">${l.terminus || '—'}</td>
+            <td class="text-muted">${l.horaire_debut || '—'} → ${l.horaire_fin || '—'}</td>
+            <td><span class="status-pill status-ok">Actif</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-action btn-edit" onclick='ouvrirModalLigne(${JSON.stringify(l)})'>Modifier</button>
+                <button class="btn-action btn-delete" onclick="supprimerLigne('${l.id}')">Supprimer</button>
+              </div>
+            </td>
+          </tr>
+        `).join("");
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    function ouvrirModalLigne(ligne = null) {
+      editingLigneId = ligne ? ligne.id : null;
+      document.getElementById("modal-ligne-title").textContent =
+        ligne ? "Modifier la ligne" : "Ajouter une ligne";
+
+      if (ligne) {
+        document.getElementById("ligne-id").value = ligne.id || "";
+        document.getElementById("ligne-nom").value = ligne.nom || "";
+        document.getElementById("ligne-type").value = ligne.type || "metro";
+        document.getElementById("ligne-couleur").value = ligne.couleur || "#006B3F";
+        document.getElementById("ligne-terminus").value = ligne.terminus || "";
+        document.getElementById("ligne-stations").value = (ligne.stations || []).join(", ");
+        document.getElementById("ligne-debut").value = ligne.horaire_debut || "05:30";
+        document.getElementById("ligne-fin").value = ligne.horaire_fin || "22:30";
+      } else {
+        document.getElementById("ligne-id").value = "";
+        document.getElementById("ligne-nom").value = "";
+        document.getElementById("ligne-type").value = "metro";
+        document.getElementById("ligne-couleur").value = "#006B3F";
+        document.getElementById("ligne-terminus").value = "";
+        document.getElementById("ligne-stations").value = "";
+        document.getElementById("ligne-debut").value = "05:30";
+        document.getElementById("ligne-fin").value = "22:30";
+      }
+
+      document.getElementById("modal-ligne").classList.remove("hidden");
+    }
+
+    function fermerModalLigne() {
+      document.getElementById("modal-ligne").classList.add("hidden");
+      editingLigneId = null;
+    }
+
+    async function sauvegarderLigne() {
+      const stations = document.getElementById("ligne-stations").value
+        .split(",").map(s => s.trim()).filter(s => s);
+
+      const ligneData = {
+        id: document.getElementById("ligne-id").value.trim(),
+        nom: document.getElementById("ligne-nom").value.trim(),
+        type: document.getElementById("ligne-type").value,
+        couleur: document.getElementById("ligne-couleur").value,
+        terminus: document.getElementById("ligne-terminus").value.trim(),
+        stations,
+        horaire_debut: document.getElementById("ligne-debut").value,
+        horaire_fin: document.getElementById("ligne-fin").value,
+      };
+
+      if (!ligneData.id || !ligneData.nom) {
+        alert("ID et nom sont requis."); return;
+      }
+
+      try {
+        const url = editingLigneId
+          ? `${API}/admin/lignes/${editingLigneId}`
+          : `${API}/admin/lignes`;
+        const method = editingLigneId ? "PUT" : "POST";
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(ligneData)
+        });
+
+        if (res.ok) {
+          fermerModalLigne();
+          chargerLignes();
+        }
+      } catch(e) { console.error(e); }
+    }
+
+    async function supprimerLigne(id) {
+      if (!confirm(`Supprimer la ligne "${id}" ?`)) return;
+      try {
+        const res = await fetch(`${API}/admin/lignes/${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) chargerLignes();
+      } catch(e) { console.error(e); }
+    }
+
+    // ── Horaires ──────────────────────────────────────────────
+    function chargerHoraireLigne(ligneId) {
+      if (!ligneId) {
+        document.getElementById("horaire-editor-content").classList.add("hidden");
+        return;
+      }
+      document.getElementById("horaire-editor-content").classList.remove("hidden");
+    }
+
+    async function sauvegarderHoraire() {
+      const ligneId = document.getElementById("horaire-ligne-select").value;
+      const debut = document.getElementById("h-debut").value;
+      const fin = document.getElementById("h-fin").value;
+      const freqPointe = document.getElementById("h-freq-pointe").value;
+      const freqNormale = document.getElementById("h-freq-normale").value;
+
+      if (!ligneId) { alert("Sélectionnez une ligne."); return; }
+
+      try {
+        const res = await fetch(`${API}/admin/lignes/${ligneId}`, {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            horaire_debut: debut,
+            horaire_fin: fin,
+            frequence_pointe: freqPointe + " min",
+            frequence_normale: freqNormale + " min",
+          })
+        });
+
+        if (res.ok) {
+          alert("Horaires sauvegardés !");
+          chargerLignes();
+        }
+      } catch(e) { console.error(e); }
+    }
+
+    // ── Billets ───────────────────────────────────────────────
+    async function chargerBillets() {
+      try {
+        const res = await fetch(`${API}/admin/billets`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        allBillets = data.billets || [];
+        afficherBillets(allBillets);
+        document.getElementById("billets-count").textContent = `${allBillets.length} billets`;
+
+        const derniers = [...allBillets].slice(0, 5);
+        document.getElementById("last-billets-list").innerHTML = derniers.map(b => `
+          <div class="mini-row">
+            <span class="mini-icon">🎫</span>
+            <div>
+              <div class="mini-name">${b.nom || '—'} — ${b.ligne}</div>
+              <div class="mini-sub">${b.label || b.type}</div>
+            </div>
+            <span class="prix-badge">${b.prix} DA</span>
+          </div>
+        `).join("");
+      } catch(e) { console.error(e); }
+    }
+
+    function afficherBillets(billets) {
+      const tbody = document.getElementById("billets-tbody");
+      tbody.innerHTML = billets.map(b => `
+        <tr>
+          <td class="mono">${b.id || '—'}</td>
+          <td>${b.nom || '—'}</td>
+          <td><span class="ligne-badge-sm" style="background:#006B3F">${b.ligne}</span></td>
+          <td class="text-muted">${b.label || b.type}</td>
+          <td class="text-muted">${b.date ? new Date(b.date).toLocaleDateString('fr-FR') : '—'}</td>
+          <td class="mono">${b.prix} DA</td>
+          <td><span class="status-pill status-ok">Valide</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function filtrerBillets(query) {
+      const filtered = allBillets.filter(b =>
+        (b.nom || "").toLowerCase().includes(query.toLowerCase()) ||
+        (b.ligne || "").toLowerCase().includes(query.toLowerCase()) ||
+        (b.id || "").toLowerCase().includes(query.toLowerCase())
+      );
+      afficherBillets(filtered);
+    }
+
+    // ── Déconnexion ───────────────────────────────────────────
+    function seDeconnecter() {
+      if (confirm("Se déconnecter ?")) {
+        localStorage.removeItem("btc-token");
+        localStorage.removeItem("btc-user");
+        window.location.href = "index.html";
+      }
+    }
+
+    // ── Fermer modal en cliquant dehors ───────────────────────
+    document.addEventListener("click", e => {
+      if (e.target.classList.contains("modal-overlay")) {
+        e.target.classList.add("hidden");
+      }
+    });
+
+    // ── Init ──────────────────────────────────────────────────
+    verifierAdmin();
+  </script>
+
+</body>
+</html>
