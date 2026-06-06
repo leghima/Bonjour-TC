@@ -173,9 +173,16 @@
       <h1>Vos déplacements à <span>Alger</span>, simplifiés.</h1>
       <p>Métro, tramway, bus — toutes les lignes et horaires en un seul endroit.</p>
       <div class="hero-search">
-        <input type="text" id="search-input" placeholder="Rechercher une station..." />
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Rechercher une station..."
+          onkeydown="if(event.key==='Enter') rechercherStation()"
+          list="stations-list"
+        />
         <button onclick="rechercherStation()">Rechercher</button>
       </div>
+      <datalist id="stations-list"></datalist>
     </div>
     <div class="hero-stats">
       <div class="stat-card">

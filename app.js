@@ -736,6 +736,53 @@ function seDeconnecter() {
   }
 }
 
+function rechercherStation() {
+  const query = document.getElementById("search-input").value.trim().toLowerCase();
+  if (!query) return;
+
+  // Chercher dans toutes les stations de toutes les lignes
+  let stationTrouvee = null;
+  let ligneTrouvee = null;
+
+  for (const ligne of lignes) {
+    const station = ligne.stations.find(s => 
+      s.toLowerCase().includes(query)
+    );
+    if (station) {
+      stationTrouvee = station;
+      ligneTrouvee = ligne;
+      break;
+    }
+  }
+
+  if (stationTrouvee) {
+    // Remplir le champ départ dans itinéraire
+    document.getElementById("depart").value = stationTrouvee;
+    
+    // Scroller vers la section itinéraire
+    document.getElementById("itineraire").scrollIntoView({ 
+      behavior: "smooth",
+      block: "center"
+    });
+
+    // Surligner visuellement la station sur la carte
+    if (mapInstance && stationsGPS[stationTrouvee]) {
+      const coords = stationsGPS[stationTrouvee];
+      mapInstance.setView(coords, 16, { animate: true });
+    }
+  } else {
+    // Afficher message d'erreur dans le champ
+    const input = document.getElementById("search-input");
+    input.style.border = "2px solid #E3001B";
+    input.placeholder = "Station introuvable — réessayez";
+    input.value = "";
+    setTimeout(() => {
+      input.style.border = "";
+      input.placeholder = "Rechercher une station...";
+    }, 2500);
+  }
+}
+
 
 function mettreAJourNavbar(user) {
   const initiales = user.nom.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
