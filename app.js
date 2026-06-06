@@ -416,7 +416,7 @@ function switchAuth(mode, btn) {
   document.getElementById("form-verification").classList.add("hidden");
 }
 
-// ── Inscription ──────────────────────────────────────────────────────────────
+
 async function sInscrire() {
   const nom = document.getElementById("reg-nom").value.trim();
   const email = document.getElementById("reg-email").value.trim();
@@ -546,7 +546,7 @@ async function seConnecter() {
       id: data.user.id,
       nom: data.user.nom,
       email: data.user.email,
-      role: data.user.role || "user"  // ← important
+      role: data.user.role || "user"
     }));
 
     document.getElementById("auth-screen").classList.add("hidden");
